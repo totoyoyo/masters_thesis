@@ -1468,7 +1468,7 @@ assert (forall  _i1: Int ::
   (opApply(_i1, (opGetIden((add()))))) == _i1)
 }
 \end{lstlisting}
-Although these properties are important for soundness, we do not need them in any of the proofs. They do not need to appear as axioms, so the separate method checks are sufficient. Also, the triggers in the asserts are essentially mute because we do not intend the quantifiers to instantiate anywhere else. 
+Although these properties are important for soundness, we do not need them in any of the proofs. They do not need to appear as axioms, so the separate method checks are sufficient. Also, the triggers in the assertions are essentially mute because we do not intend the quantifiers to instantiate anywhere else. 
 
 \subsection{Injectivity Of Receiver on the Filter}
 Injectivity of the receiver with respect to the filter is required by quantified permissions. Since we use quantified permissions extensively in the snapshot function specifications, Viper must be able to prove injectivity to avoid well-definedness errors in using the snapshots. 
@@ -1505,6 +1505,7 @@ To do after the 14th of December.
 \section{Limitations to Users}
 
 \chapter{Other Lessons}
+To do after the 14th of December. 
 
 \section{Implication Support in SMT}
 
@@ -1513,16 +1514,57 @@ To do after the 14th of December.
 \section{Generated Axioms with no Triggers}
 
 \chapter{Related Works}
+	
 
 \section{Spec\#}
+Spec\# is a specification language on top of C\# developed by Microsoft Research. It provides predefined fold operations, such as sum, count, product, min, and max. In the original paper, these folds were referred to as ``comprehensions,'' which may explain why similar work has used the same term. However, our project uses the term "heap-dependent fold".
+
+The folds in Spec\# are limited only to integer indices, whereas our plugin allows any arbitrary types. The axioms in Spec\# also assume some ordering in its support for decompositions. A fold can be decomposed by removing an element at the lowest index or at the highest index. This works for integer ranges but is not scalable to arbitrary types. This also means Spec\# does not support arbitrarily pulling out a random integer "i" in a decomposition, which we do. This is a crucial feature in our implementation because we want to support reasoning for random access data structures, which, by definition, can be accessed at any arbitrary point.
+
+Spec\# does have an axiom for decomposing a fold into two folds with two smaller filters. However, this requires manual triggering from the user. Two folds must exist with one high index equal to the other low index; the two can then be added together. Our tool instead detects relevant filters according to heap modifications and generates the decomposition manually.    
+
+Though the examples presented in the Spec\# paper all included arrays, technically, it also supports folds that are not heap-dependent. The fold can be on any arbitrary expression that may utilize an integer index. Our tool only supports heap-dependent folds, but we can also rely on heap modifications to pick the appropriate decompositions. Spec\# does not use heap reads or writes to axiomatize its folds.
 
 \section{Tierry's Thesis}
+Tierry Hoermann's bachelor’s thesis also attempted to implement folds (also called comprehensions, likely because of Spec\#) in Viper. His implementation was in Boogie, which allows him to write quantifiers on the heap. Instead, our plugin adds code to the original Viper file. 
 
-\section{Arshavir's Dissertation}
+One standout feature of his axioms is allowing arbitrary combinations of filters. In the general case, his axiom checks each filter against every other filter for subset or disjoint relations. If the subset relation holds, the two filters subtract to generate another filter. If they are disjoint, the axioms generate a new filter, which is the union of the two disjoint filters. Although the newly formed filters are prevented from generating more filters, similar to our secondary fold idea, the checks are still very costly. Each of these checks happens for each pair of filters, which leads to at least a polynomial complexity with respect to the number of filters.
+
+Hoermann does perform automatic decomposition based on heap reassignments with the operator ":=." However, his analysis shows that the time complexity for singleton decomposition is $O(n^n)$, with $n$ as the number of heap locations modified. We have reduced this to linear by using our local and intermediate strategy, allowing for modular handling at each heap access. 
+
+Unfortunately, his thesis only partially touched on implementation details, and the project code on Bitbucket has been removed. We are unable to reproduce his results.
+
+\section{Arshavir Ter-Gabrielyan 's Dissertation}
+Arshavir Ter-Gabrielyan formalizes folds, which he referred to as comprehensions, to help with reasoning about reachability in Viper. In doing so, he defines snapshot maps, which we have used extensively in our implementation.
+
+The input to his fold is a set of references, in contrast to a filter and a receiver function in our implementation. This allows him to circumvent the injectivity problem because each reference in a set of references is unique, by property of a set. In practice, however, this makes defining the input set more complicated and unnatural. The user would often need to declare a set and write additional axioms using some base indices and a receiver anyway. Furthermore, this design does not align with the design for quantified permissions, which we use extensively. 
+
+Furthermore, Ter-Gabrielyan's folds are not exclusively heap-dependent, allowing a more general body in the fold expressions. In an interesting example, Ter-Gabrielyan proposes nested folds to reason about matrices. However, he does not discuss the automatic decomposition of the folds in response to heap updates. It is unclear how to reconcile heap-dependent components of the fold and non-heap-dependent components, especially when certain components may interact with each other. 
 
 \chapter{Conclusion and Future Work}
+We have designed a plugin for supporting heap-dependent folds in Viper. This allows the user to reason about properties of random access data structures without relying on induction. Folds are decomposed automatically in response to heap reads and updates, namely reassignment, exhales, and inhales. 
+
+In addition, we introduce a modular strategy to reason about each heap change locally, reducing coupling between folds at different states. We solved the combinatorial explosion resulting from repeated decomposition and reduced the number of generated folds to $O(n)$, with $n$ as the number of heap updates. We implemented all this as a plugin in Viper, only modifying the Viper input. This should make the plugin compatible with any frontend and verifier, though only the Carbon verifier works with it in practice.
 
 
+\section{Future Work}
+\subsection{Implementation in the Verifier}
+Further research could attempt to implement fold supports at the verifier level instead of the Viper level. More fine-grain control of the calls to the SMT solver could lead to more flexibility. It may be possible to remove case splits that have high-performance costs.
+
+Furthermore, we relied heavily on interactions with the heap, which could be done more explicitly in Boogie. Implementing folds using the Carbon verifier, which translates Viper into Boogie, could make the heap-dependent components of the fold easier to handle. 
+
+\subsection{Heap-dependent Triggers}
+Our axioms rely heavily on heap-dependent triggers despite the lack of research into their behaviour. From our own experiments, much of the undocumented behaviour is unexpected, \ie, some axioms trigger when they are not supposed to, or some axioms do not trigger when they should. For example, triggers that mention a later state never instantiate the axiom. Further research into state-dependent triggers and refinements to the Boogie encoding of the heap-dependent functions may help. 
+
+
+\subsection{Optimization}
+Our experiments showed some surprisingly poor performance, but we lack the tools to investigate the causes of these performance drops properly. Though the Axiom Profiler exists, we are still missing tools to visualize the proofs for individual assertions. Research into better debugging tools could help us examine the relevant axioms and instances for each assertion; this way, we can also isolate the performance hogs and remove them if possible.
+
+\subsection{Syntax Improvements}
+With our plugin, a component of a fold has to be individually declared explicitly at the top level. Ideally, a fold can be defined with inlined anonymous functions, as commonly found in general programming languages. Further research could extend the techniques of defunctionalization to support inlined function declarations, which could be useful to Viper overall, not just for expressing folds.  
+
+\subsection{Support for General Folds}
+Our plugin supports heap-dependent folds, not arbitrary folds. It cannot express a sum of an arbitrary set of integers. Further research could examine the axiomatizations to support general folds. In particular, how to reconcile the techniques for non-heap-dependent and heap-dependent folds is unclear. If a fold contains both heap-dependent and independent portions, how should the decompositions look in response to heap reads, inhales, exhales, and reassignment? 
 
 \chapter{LATEX STUFF}
 
