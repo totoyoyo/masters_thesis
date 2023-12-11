@@ -1,0 +1,1697 @@
+
+%% This program consists of the files ubcthesis.dtx, ubcthesis.ins, and
+%% the sample figures fig.eps and fig.fig.
+%% 
+%% This file may be modified and used as a base for your thesis without
+%% including the licence agreement as long as the content (i.e. textual
+%% body) of the file is completely rewritten. You must, however, change
+%% the name of the file.
+%% 
+%% This file may only be distributed together with a copy of this
+%% program. You may, however, distribute this program without generated
+%% files such as this one.
+%% 
+
+% This Sample thesis requires \LaTeX2e
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+\ProvidesFile{ubcsample.tex}[2015/05/31 v1.72 ^^J
+ University of British Columbia Sample Thesis]
+% This is the \documentclass[]{} command.  The mandatory argument
+% specifies the "flavour" of the thesis (ubcthesis for UBC).  The
+% optional arguments (in []) specify options that affect how the
+% thesis is displayed.  Please see the ubcthesis documentation for
+% details about the options.
+\documentclass[msc,oneside]{ubcthesis}
+%
+% To compile this sample thesis, issue the following commands:
+% latex ubcsample
+% bibtex ubcsample
+% latex ubcsample
+% latex ubcsample
+% latex ubcsample
+%
+% To view use xdvi (on unix systems):
+% xdvi ubcsample.dvi
+%
+% To make a postscript file, use dvips:
+% dvips -o ubcsample.ps ubcsample.dvi
+%
+% To view the postscript file, use ghostview or gv (on unix systems):
+% gv ubcsample.ps
+%
+%************************************************
+% Optional packages.
+%
+% The use of these packages is optional, but they provide various
+% tools for more flexible formating.  The sample thesis uses these,
+% but if you remove the example code, you should be able to exclude
+% these packages.  Only standard packages have been described here;
+% they should be installed with any complete LaTeX instalation, but
+% if not, you can find them at the Comprehensive TeX Archive Network
+% (CTAN): http://www.ctan.org/
+%
+
+\usepackage{listings}
+\usepackage{amsmath}
+
+\usepackage{silver}
+
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\input{macros_alex}
+\lstset{language=silver,numbers=left, firstnumber=1, stepnumber=1, float}
+\lstMakeShortInline{"}
+
+
+
+%******** afterpage ***************************
+% This package allows you to issue commands at the end of the current
+% page.  A good use for this is to use the command
+% \afterpage{\clearpage} right after a figure.  This will cause the
+% figure to be inserted on the page following the current one (or on
+% the current page if it will fit) but will not break the page in the
+% middle.
+\usepackage{afterpage}
+
+%******** float *********************************
+% This package allows you to customize the style of
+% "floats"---floating objects such as figures and tables.  In
+% addition, it allows you to define additional floating objects which
+% may be included in a list similar to that produces by \listoftables
+% and \listoffigures.  Common uses include introducing floats for
+% programs and other code bits in Compute Science and Chemical Schema.
+\usepackage{float}
+
+%******** tocloft *******************************
+% This package allows you to customize and define custom lists such
+% as a list of programs or Chemical Scheme.  Note: if you use the
+% subfigure package, you must specify that you do as an option here.
+% The title option uses the default formatting.  We do not use this
+% here as the default formatting is acceptable.  Use the float
+% package instead unless you need the extra formatting control
+% provided by tocloft.
+%\usepackage[subfigure, titles]{tocloft}
+
+%******** alltt *********************************
+% The alltt package allows you to include files and have them
+% formatted in a verbatim fashion.  This is useful for including
+% source code from an additional file.
+%\usepackage{alltt}
+
+%******** listings ******************************
+% The listings package may be used to include chunks of source code
+% and has facilities for pretty-printing many languages.
+%\usepackage{listings}
+
+%******** longtable *****************************
+% The longtable package allows you to define tables that span
+% multiple pages.
+\usepackage{longtable}
+
+%******** graphics and graphicx *****************
+% This allows you to include encapsulated postscript files.  If you
+% don't have this, comment the \includegraphics{} line following the
+% comment "%includegraphics" later in this file.
+\usepackage{graphicx}
+
+%******** subfigure *****************************
+% The subfigure package allows you to include multiple figures and
+% captions within a single figure environment.
+%\usepackage{subfigure}
+
+%******** here **********************************
+% The here package gives you more control over the placement of
+% figures and tables.  In particular, you can specify the placement
+% "H" which means "Put the figure here" rather than [h] which means
+% "I would suggest that you put the figure here if you think it looks
+% good."
+%\usepackage{here}
+
+%******** pdflscape ********************************
+% This allows you to include landscape layout pages by using the
+% |landscape| environment.  The use of |pdflscape| is preferred over
+% the standard |lscape| package because it automatically rotates the
+% page in the pdf file for easier reading.  (Thanks to Joseph Shea
+% for pointing this out.)
+\usepackage{pdflscape}
+
+%******** natbib ********************************
+% This is a very nice package for bibliographies.  It includes options
+% for sorting and compressing bibliographic entries.
+\usepackage[numbers,sort&compress]{natbib}
+
+%******** psfrag ******************************
+% This allows you to replace text in postscript pictures with formated
+% latex text.  This allows you to use math in graph labels
+% etc. Uncomment the psfrag lines following the "%psfrag" comment
+% later in this file if you don't have this package.  The replacements
+% will only be visible in the final postscript file: they will be
+% listed in the .dvi file but not performed.
+\usepackage{psfrag}
+
+%******** hyperref *****************************
+% Please read the manual:
+% http://www.tug.org/applications/hyperref/manual.html
+%
+% This adds hyperlinks to your document: with the right viewers (later
+% versions of xdvi, acrobat with pdftex, latex2html etc.) this will
+% make your equation, figure, citation references etc. hyperlinks so
+% that you can click on them.  Also, your table of contents will be
+% able to take you to the appropriate sections.  In the viewers that
+% support this, the links often appear with an underscore.  This
+% underscore will not appear in printed versions.
+%
+% Note: if you do not use the hypertex option, then the dvips driver
+% may be loaded by default.  This will cause the entries in the list
+% of figures and list of tables to be on a single line because dvips
+% does not deal with hyperlinks on broken lines properly.
+%
+% NOTE: HYPERREF is sensitive to the ORDER in which it is LOADED.
+% For example, it must be loaded AFTER natbib but BEFORE newly
+% defined float environments.  See the README file with the hyperref
+% for some help with this.  If you have some very obscure errors, try
+% first disabling hyperref.  If that fixes the problem, try various
+% orderings.
+%
+% Note also that there is a bug with versions before 2003/11/30
+% v6.74m that cause the float package to not function correctly.
+% Please ensure you have a current version of this package.  A
+% warning will be issued if you leave the date below but do not have
+% a current version installed.
+%
+% Some notes on options: depending on how you build your files, you
+% may need to choose the appropriate option (such as [pdftex]) for the
+% backend driver (see the hyperref manual for a complete list).  Also,
+% the default here is to make links from the page numbers in the table
+% of contents and lists of figures etc.  There are other options:
+% excluding the [linktocpage] option will make the entire text a
+% hyperref, but for some backends will prevent the text from wrapping
+% which can look terrible.  There is a [breaklinks=true] option that
+% will be set if the backend supports (dvipdfm for example supports
+% it but does not work with psfrag.)
+%
+% Finally, there are many options for choosing the colours of the
+% links.  These will be included by default in future versions but
+% you should probably consider changing some now for the electronic
+% version of your thesis.
+\usepackage[unicode=true,
+  linktocpage,
+  linkbordercolor={0.5 0.5 1},
+  citebordercolor={0.5 1 0.5},
+  linkcolor=blue]{hyperref}
+
+% If you would like to compile this sample thesis without the
+% hyperref package, then you will need to comment out the previous
+% \usepackage command and uncomment the following command which will
+% put the URL's in a typewriter font but not link them.
+%\newcommand\url[1]{\texttt{#1}}
+
+%******** setspace *******************************
+% The setspace package allows you to manually set the spacing of the
+% file.  UBC may require 1.5 spacing for microfilming of theses.  In
+% this case you may obtain this by including this package and issuing
+% one of the following commands:
+%\usepackage{setspace}
+%\singlespacing
+%\onehalfspacing
+%\doublespacing
+
+% These commands are optional.  The defaults are shown.  You only
+% need to include them if you need a different value
+\institution{The University Of British Columbia}
+
+% If you are at the Okanagan campus, then you should specify these
+% instead.
+%\faculty{The College of Graduate Studies}
+%\institutionaddress{Okanagan}
+\faculty{The Faculty of Graduate Studies}
+\institutionaddress{Vancouver}
+
+% You can issue as many of these as you have...
+% \previousdegree{B.Sc., Yale-NUS College, 2021}
+
+% You can override the option setting here.
+% \degreetitle{Jack of All Trades}
+
+% These commands are required.
+\title{DRAFT: Supporting Automatic Decompositions of Folds in Viper}
+% \subtitle{With a Subtitle}
+\author{Peeranat Tokaeo}
+\copyrightyear{2023}
+\submitdate{\monthname\ \number\year} % The "\ " is required after
+                                      % \monthname to prevent the
+                                      % command from eating the space.
+\program{Computer Science}
+
+% These commands are presently not required for UBC theses as the
+% advisor's name and title are not presently required anywhere.
+\advisor{Dr. Alex Summers}
+%\advisortitle{Professor of Physics}
+
+% One might want to override the format of the section and chapter
+% numbers.  This shows you how to do it.  Note that the current
+% format is acceptable for submission to the FoGS: If you wish to modify
+% these, you should check with the FoGS explicity. prior to making
+% the modifications.
+\renewcommand\thepart         {\Roman{part}}
+\renewcommand\thechapter      {\arabic{chapter}}
+\renewcommand\thesection      {\thechapter.\arabic{section}}
+\renewcommand\thesubsection   {\thesection.\arabic{subsection}}
+\renewcommand\thesubsubsection{\thesubsection.\arabic{subsubsection}}
+\renewcommand\theparagraph    {\thesubsubsection.\arabic{paragraph}}
+\renewcommand\thesubparagraph {\theparagraph.\arabic{subparagraph}}
+
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{2}
+
+% Here is an example of a "Program" environment defined with the
+% "float" package.  The list of programs will be stored in the file
+% ubcsample.lop and the numbering will start with the chapter
+% number.  The style will be "ruled".
+\floatstyle{ruled}
+\newfloat{Program}{htbp}{lop}[chapter]
+
+% Here is the start of the document.
+\begin{document}
+
+%% This starts numbering in Roman numerals as required for the thesis
+%% style and is mandatory.
+\frontmatter
+
+%%% The order of the following components should be preserved.  The order
+%%% listed here is the order currently required by FoGS:        \\
+%%% Title (Mandatory)                                           \\
+%%% Preface (Mandatory if any collaborator contributions)       \\
+%%% Abstract (Mandatory)                                        \\
+%%% List of Contents, Tables, Figures, etc. (As appropriate)    \\
+%%% Acknowledgements (Optional)                                 \\
+%%% Dedication (Optional)                                       \\
+
+\maketitle                      %% Mandatory
+
+\clearpage
+
+%%%THESIS APPROVAL PAGE - REQUIRED AS PART OF YOUR COMPLETED THESIS
+
+%%%%%%% UBC FoGPS Requires the following statements at the beginning of the thesis. There is a (separate) thesis approval form that has to be signed and dated by the same individuals listed here as approving the thesis. You will have to ensure that your department submits that approval form before you will be able to create an account and upload your thesis onto ciRCle. 
+
+\clearpage
+
+% \begin{abstract}                %% Mandatory -  maximum 350 words
+%   The \texttt{genthesis.cls} \LaTeX{} class file and accompanying
+%   documents, such as this sample thesis, are distributed in the hope
+%   that it will be useful but without any warranty (without even the
+%   implied warranty of fitness for a particular purpose).  For a
+%   description of this file's purpose and instructions on its use, see
+%   below.
+
+%   These files are distributed under the GPL, which should be included
+%   here in the future.  Please let the author know of any changes or
+%   improvements that should be made.\footnote{This thesis template was uploaded to OverLeaf in 2021 by UBC MSc student Naba Mukhtar and modified to recent UBC requirements by Leah Edelstein-Keshet September 2021.}
+
+%   Michael Forbes.
+%   mforbes@physics.ubc.ca, michael.forbes@wsu.edu
+  
+% \end{abstract}
+
+% \chapter{Lay Summary}
+
+% [Required, Maximum 150 words]
+
+% This is a simple summary of your thesis, written so that members of the public will get some idea about what you have done. 
+
+% \chapter{Preface} % Mandatory if any of the conditions are met
+
+% %%% Sections and subsections etc., in the Preface should, in general
+% %%% not be listed in the table of contents, so use the starred form
+% %%% of \section etc.
+% \section*{Examples}
+% Note that this preface must come before the table of contents.  Note
+% also that this section ``Examples'' should not be listed in the table
+% of contents, so we have used the starred form: \verb|\section*{Example}|.
+
+\tableofcontents                %% Mandatory
+% \listoftables                   %% Mandatory if the thesis has tables
+% \listoffigures                  %% Mandatory if the thesis has figures
+% \listof{Program}{List of Programs} %% Optional
+%% Any other lists should come here, i.e.
+%% Abbreviation schemes, definitions, lists of formulae, list of
+%% schemes, glossary, list of symbols etc.
+
+% \chapter{Acknowledgements}      %% Optional
+% This is the place to thank professional colleagues and people who have
+% given you the most help during the course of your graduate work.
+
+% \chapter{Dedication} %% Optional
+% The dedication is usually quite short, and is a personal rather than
+% an academic recognition.  The \emph{Dedication} does not have to be
+% titled, but it must appear in the table of contents.  If you want to
+% skip the chapter title but still enter it into the Table of Contents,
+% use this command \verb|\chapter[Dedication]{}|.
+
+% Note that this section is the last of the preliminary pages (with
+% lowercase Roman numeral page numbers).  It must be placed
+% \emph{before} the \verb|\mainmatter| command.  After that, Arabic
+% numbered pages will begin.
+
+% Any other unusual prefactory material should come here before the
+% main body.
+
+% Now regular page numbering begins.
+\mainmatter
+
+% Parts are the largest structural units, but are optional.
+%\part{Thesis}
+
+% Chapters are the next main unit.
+\chapter{Introduction}
+
+% Sections are a sub-unit
+\section{Motivations}
+Here is a section with some text.  Equations look like this
+$y=x$.\footnote{Here is a footnote.}
+
+This is an example of a second paragraph in a section so you can
+see how much it is indented by.
+
+% Subsections follow
+\section{Related Works}
+
+to use look at the file \texttt{ubcsample.bbl} after you compile this
+file.\footnote{Here is another footnote.}
+
+\subsubsection{This is a Subsubsection}
+Here are some more citations \cite{LL3:1977,Peccei:1989,Turner:1999}.
+If you use the \texttt{natbib} package with the \verb+sort&compress+
+option, then the following citation will look the same as the first
+citation in this section: \cite{Turner:1999,Peccei:1989,LL3:1977}.
+
+
+\begin{table}[t]                 % optional [t, b or h];
+  \begin{tabular}{|r||r@{.}l|}
+    \hline
+    Phoenix & \$960&35\\
+    \hline
+    Calgary & \$250&00\\
+    \hline
+  \end{tabular}
+  \caption[Here is the caption for this wonderful table\ldots]{
+    \label{tab:Table1}
+    Here is the caption for this wonderful table. It has not been
+    centered and the positioning has been specified to be at the top
+    of the page.  Thus it appears above the babble rather than below
+    where it is defined in the source file.}
+\end{table}
+
+% Force a new page: without this, the quote would appear on the
+% previous page.
+\newpage
+
+\chapter{Background}
+
+\section{Program Verification}
+
+Program verification is the process of proving the correctness of a program according to its formal specifications. In this process, the programmer first annotates the source program with assertions written in a specification language. The source program is then transformed into a verification language program, usually with the help of a verification frontend. Finally, a program verifier checks the program statically, \ie, without executing the program, to verify the annotated assertions.
+
+\section{Viper}
+
+Viper is a verification infrastructure which provides an intermediate verification language and two built-in verifier backends. The first backend, Silicon, relies on symbolic execution, and the second backend, Carbon, generates verification conditions in Boogie, another intermediate verification language. Both ultimately use the SMT solver Z3 to check the validity of the input Viper program. Typically, we use the word "Viper" to refer to the intermediate verification language and "Viper backends" to refer to the two backends as described. A Viper frontend, such as Gobra or Prusti, extends a general-purpose programming language with a specification language for annotations and ultimately compiles the program from the source language into Viper for verification. 
+
+\section{Viper Framing and Permissions}
+A key feature of Viper is its support for permissions logic, which is a solution to the frame problem of heap-modifying programs.
+
+\subsection{The Frame Problem}
+The frame problem is a problem that arises in modular program verification when it becomes too verbose to describe how a method or function changes the state of a program. In modular program verification, a call to a method is summarized by a set of preconditions and postconditions rather than explicitly duplicating the body of the method. In this way, the method body can be abstracted and described modularly by its specifications.  Concretely, a verifier translates a method call into an assertion of the preconditions, \ie, the requirements of the methods, and an assumption of the post-condition, \ie, the effects of the method. 
+
+However, in the presence of a global state like the heap, any method body could modify that state. Without any additional specification, one would need to conservatively assume that the entire global state has changed once a method call occurs. 
+
+For example, suppose the method "modifyState" modifies an array "a" at index "i", and suppose that the array elements are stored in the heap, making them global. "a[i]" refers to array element indexed "i".
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+method modifyState(a: Array, i: Int)
+    requires length(a) > i
+    ensures a[i] == 10
+{
+    a[i] := 10
+    a[0] := 0
+}
+\end{lstlisting}
+The postcondition of the method ensures that the array element at index "i" has a value of 10, but the method body also modifies the element at index 0. The method specifications (without the body) do not specify the values at other array indices, so for soundness, the method caller has to assume that all elements could have changed.
+
+Alternatively, the programmer would have to write more verbose pre/post-conditions to describe the unchanged portion of the global state. For example, the modifyState method specifications must be rewritten to include a framing axiom, \ie, an axiom that prescribes the states that remained unchanged.
+\begin{lstlisting}
+method modifyState(a: Array, i: Int)
+    requires length(a) > i
+    ensures a[i] == 10
+    ensures forall j: Int ::   
+        j != i && j != 0 ==> a[j] == old(a[j])  
+            // old means the state before the method execution 
+{
+    a[i] := 10
+    a[0] := 0
+}
+\end{lstlisting}
+This becomes excessive very quickly because additional axioms must be added for all heap locations, and every modular heap-modifying component must contain these axioms. 
+
+
+\subsection{Permissions}
+To mitigate the frame problem, Viper uses permission logic to describe heap location permissions that a method may have. A permission is a key to access a heap location, and each heap location has exactly 1/1 permissions. Modular program components in Viper, such as methods, functions, and loops, require permission for specific locations to read and/or modify them. They can also have fractional permissions, which may allow components to read the heap locations but not modify them. To write, it needs to have full permissions, \ie, 1/1. Fractional permissions are particularly useful for modelling concurrent programs with methods accessing the same global state concurrently.
+
+Permissions frame the method implicitly because the method can only use and/or modify the global state that it has permissions to; any other global state is assumed to be unchanged by the method. Going back to the "modifyState" example, we can include the permissions in the method's pre/post conditions.  
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+method modifyState(a: Array, i: Int)
+    requires length(a) > i
+    requires acc(a[i]) && acc(a[0]) // takes permissions
+    ensures a[i] == 10
+    ensures  acc(a[i]) && acc(a[0]) // gives permissions
+{
+    a[i] := 10
+    a[0] := 0
+}
+\end{lstlisting}
+Here, the method only takes permissions to array indices 0 and "i", so any other index can be assumed unchanged. The specification does not need to include an explicit framing axiom denoting that all other indices remain the same.
+
+From a modular component's perspective, giving permissions away, such as by calling a method, means losing knowledge about a certain global state. Likewise, if a method holds permissions for a heap location, it knows that the location could not have been modified while it currently holds permissions. There is only 1 permission per heap location, and any other method would have needed permissions to modify it. 
+
+Notice also that the "modifyState" method takes permissions in the "requires" but also gives those permissions back in the "ensures." From the caller's perspective, it gives "modifyState" permissions and gets the permissions back after that method is finished.
+
+The kind of permission logic Viper employs is more precisely called implicit dynamic frames. ``Frames'' refers to framing modular program components, like method calls, function calls, and loops. ``Implicit'' refers to how the frames are implicitly determined by the permissions given to a method, and methods are framed to the portion of the global state to which they have permissions. No explicit framing axioms are required. The frames are ``dynamic'' because the permissions may depend on values in the program, so permission checks must be done with calls to the SMT solver.
+
+\section{Viper Basic Features and Syntax}
+Next, we will discuss some of the fundamental Viper constructs in this section for future reference when demonstrating our design with Viper code. The code examples that we have described so far are in pseudocode. So, in this section, we will introduce the correct Viper constructs to transform our pseudocode example to real Viper. Let us use the last pseudocode code snippet we discussed as the leading example.
+
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+method modifyState(a: Array, i: Int)
+    requires length(a) > i
+    requires acc(a[i]) && acc(a[0]) // takes permissions
+    ensures a[i] == 10
+    ensures  acc(a[i]) && acc(a[0]) // gives permissions
+{
+    a[i] := 10
+    a[0] := 0
+}
+\end{lstlisting}
+
+\subsection{Methods}
+Our "modifyState" snippet above is a method declaration. A Viper method is a sequence of statements where much of Viper's verification happens. Viper handles a method call modularly by only using the method's pre and post-conditions, which are denoted in the method declaration with keywords \lstinline{requires} and \lstinline{ensures}. Viper verifies that the method satisfies its specifications once, and any calls to the method get abstracted into its specifications.
+
+In verifying a method, Viper first assumes the preconditions, verifies the body, and then verifies that the post-condition holds. Verifying and calling a method have opposite behaviours. Verifying a method means inhaling its preconditions and exhaling its postconditions. Calling a method means exhaling the preconditions and inhaling the post-conditions. For now, think of exhales as asserts and inhales as assumes. "assert" will check the condition written in the statement, and "assume" will assume the conditions as true. If another method, "caller," calls "modifyState", the call essentially gets translated into exhales and inhales, as in the following example.
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+method caller(a: Array, i: Int)
+    requires length(a) > i
+    requires acc(a[i]) && acc(a[0])
+    ensures  acc(a[i]) && acc(a[0])
+{
+    // modifyState(a,i) desugars into exhales and inhales of its specifications.
+    exhale length(a) > i
+    exhale acc(a[i]) && acc(a[0])
+    inhale a[i] == 10
+    inhale  acc(a[i]) && acc(a[0]) // gives permissions
+}
+\end{lstlisting}
+
+\subsection{Statements}
+Inhales and exhales are examples of Viper statements. Viper statements include common programming operations such as variable declarations, variable assignments, if-loops, and while-loops. 
+
+Here are some Viper statements that are not common programming operations.
+\begin{itemize}
+    \item \lstinline{assert A}: Check the permissions and propositions in A.
+    \item \lstinline{assume A}: Assume the permissions and propositions in A.
+    \item \lstinline{exhale A}: Remove the permissions and assume the propositions in A. 
+    \item \lstinline{inhale A}: Add the permissions and assume the propositions in A.
+\end{itemize}
+
+Asserts and assumes are statements that do not modify permissions, whereas inhales and exhales do. When permissions are not relevant, asserts and exhales can be used interchangeably, as with assumes and inhales. 
+
+\subsection{Viper State}
+Inhales and exhales could modify the current state but assumes and asserts do not.
+
+According to the Viper tutorial, the Viper program state includes 
+\begin{itemize}
+    \item All variables in scope, such as the local variables, input parameters, and return variables.  
+    \item Permissions to heap locations
+    \item Values stored in heap locations
+\end{itemize}
+
+One can use old expressions like "old[a](...)" to denote the value at a certain state, defined by some "label a". Old expressions, however, only work for heap values, not general variables.
+
+Statements that modify state are impure, while those that do not are pure. Variable and heap reassignment with ":=" are obviously impure. However, statements that modify permissions via "inhale" and "exhale" are also impure.
+
+\subsection{Gaining and Losing Permissions Through Accessibility Predicate}
+Differences between asserts and exhales appear when accessibility predicates are used, as denoted by \lstinline{acc(A)} where "A" mentions a heap location. For example, the "caller" method body has the statement "exhale acc(a[i]) && acc(a[0])". An accessibility predicate describes access to a specific heap location and is considered an impure expression, because inhaling or exhaling the predicate may modify the current permissions. Inhaling an accessibility predicate means gaining permissions to the heap location, and exhaling an accessibility predicate means losing permissions. 
+
+\subsubsection{Perm expressions}
+Accessibility predicates are also allowed inside assert and assume statements, but this is generally discouraged due to their impurity. In such scenarios, it is preferable to use perm expressions, \lstinline{perm(A)}, which represent permissions to a heap location as a fraction. Perm expressions are pure, so inhaling or exhaling them will not modify the current permissions available. Also, perm expressions are fractions, while accessibility predicates are boolean values by definition, so their usages are slightly different.
+
+\subsubsection{Separating Conjunctions}
+Accessibility predicates can be conjoined together using the \lstinline{&&} operator, as in "exhale acc(a[i]) && acc(a[0])". This represents a separating conjunction in Viper. For other expressions, the "&&" operator behaves like the ordinary logical \& operator. But on accessibility predicates, the separating conjunction requires that the permissions must be separate, \ie, we have the sum of the conjoined permissions. 
+
+For example, "exhale acc(a[i]) && acc(a[i])" translates to checking that the state contains 1 permission for heap location "a[i]" and also another 1 permission for "a[i]." This would require 2 permissions to the same location, "a[i]," which is not possible by definition. So, the exhale would fail and raise a verification error.
+
+This separating property of the "&&" operator helps prevent complications from aliasing. If x and y are aliases of the same reference, \lstinline{exhale acc(x.F) && acc(y.F)} would fail. Likewise, \lstinline{inhale acc(x.F) && acc(y.F)} implies that x and y are not aliases.  
+
+% where \lstinline|A| contains a field access, such as \lstinline|r.val|. An accessibility predicate describes access to a specific heap location and is considered an impure expression. Inhaling an accessibility predicate means gaining permissions to the heap location, and exhaling an accessibility predicate means losing permissions. 
+
+\subsection{Quantified Permissions}
+Although multiple accessibility predicates can be conjoined with the "&&" operator, sometimes we need to use them inside a universal quantifier. For example, we may want to express having permissions from array indices 0 up to an unbounded array length. Explicitly writing out each index is impossible, so we want to write the accessibility predicates inside a quantifier, like in the following code snippet. 
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+method hasAllArray(a: Array, i: Int)
+    requires forall i: Int :: i >= 0 && i< len(a) ==> acc(a[i])  
+        // This precondition expresses having permissions to all array locations.
+\end{lstlisting}
+Accessibility predicates that appear inside a universal quantifier are called quantified permissions. The usual form of quantified permissions is "forall x: T :: c(x) => acc(r(x).F, p(x))", where "T" is an arbitrary type, "c" is some boolean function over "x", "r(x).F" is some heap location, and "p" is a function denoting the fractional permissions at each "x". "c" can be thought of as a filter limiting the quantified permissions over the set of input "x" that passes the filter.
+
+In our "hasAllArray" example, "forall x: T" is  "forall i: Int". The boolean expression "c(x)" is " i >= 0 && i< len(a)", and the access predicate "acc(r(x).F, p(x))" is "acc(a[i])"; here, p(x) is omitted, which gets interpreted as 1 full permissions in Viper.
+
+Now, we have been using the pseudocode "a[i]" to represent the array element at index "i", but arrays do not actually have native support in Viper. To model arrays properly, we need to use Viper domains.
+
+% Viper requires that receiver function "r" must be provably injective over "x" that passes through the filter "c".  The verifier would perform an injectivity check for each program point where quantified permissions appear. With injectivity, each instance of "x" maps to a different reference, so each instance of the accessibility predicate denotes access to a different heap location.
+
+% Injectivity of the receiver function will also appear in our formalization of a heap-dependent fold. 
+
+\subsection{Domains}
+An array type can be declared as a Viper domain. Viper domains allow the definitions of new types, functions, and axioms. A Viper domain modelling arrays is shown below:
+
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+domain Array {
+  function loc(a: Array, i: Int): Ref
+  function len(a: Array): Int
+
+  axiom len_nonneg {
+    forall a: Array :: { len(a) }
+      len(a) >= 0
+  }
+}
+\end{lstlisting}
+
+Above, we define a new type \lstinline|domain Array| and two new functions. These functions are uninterpreted functions without bodies, so we often must write axioms to describe their behaviour. In this example, the axiom, \lstinline|len_nonneg|, says that len(a) is always non-negative. Notice that the forall quantifier has a trigger "{ len(a) }"; we will discuss triggers in more detail later.
+
+Now, consider the function "loc(a: Array, i: Int)," which returns a "Ref" given an array and an index. Previously, we used "a[i]" to refer to an array element, which we supposed was typed "Int". In real Viper, we would instead write "loc(a,i)", but this gives a "Ref" not an Int. To actually model a global variable of a predefined type, we would need to link a field to a reference.
+
+A domain can also use type variables to allow for polymorphism. For example, the following domain declares a type variable "A" that can also be used within the domain definitions.
+\begin{lstlisting}
+domain Example[A] {
+  function f(a:A) : A
+}
+\end{lstlisting}
+The function "f" is polymorphic; it takes an input of any type "A" and outputs the same type. Viper also allows declaring functions outside of domains. Those functions can depend on the heap and can have bodies, but notably, they cannot use type variables like domain functions. We discuss more about these non-domain functions later.
+
+\subsection{Fields}
+In Viper, global variables are represented by fields inside objects. Objects are represented with pointers of type \lstinline{Ref}, and all objects contain all fields. Together, objects and fields point to heap locations, also called field locations. Intuitively, one can conceptualize the heap as a mutable map of type \lstinline{(Ref, Field A) $\rightarrow$ A}. In fact, the Viper backends would model the heap as exactly this map!
+
+Fields can be declared at the top level using the keyword \lstinline|field|. For example, \lstinline|field val: Int| declares a field of type \lstinline{Int} called \lstinline{val}. The field \lstinline|val| of some reference \lstinline|r| is represented by \lstinline|r.val|, which can then be read and/or written to, given we have permissions to that heap location.
+
+So, the pseudocode representing an array element "a[i]" should instead be written as "loc(a,i).val" in Viper.
+
+\section{SMT Solving and Triggers}
+To check the "exhale" and "assert" statements inside methods, Viper relies on generating verification conditions for an SMT solver.
+
+\subsection{Satisfiability Modulo Theories (SMT)}
+An SMT solver is a tool that solves satisfiability modulo theories problems or SMT for short. SMT problems are a generalization of the Boolean satisfiability problem, SAT for short. A SAT problem involves finding a solution to a Boolean formula by assigning a value to each variable. A model is a map from all variables to their respective truth value. If a solution exists, the formula is considered satisfiable. For example, $A \land B$ is satisfiable with the model mapping $A = \textit{true}$ and $B = \textit{true}$. A formula is considered valid if it always holds, regardless of the model. For example, $A \land \neg A$ is valid because the formula evaluates to true regardless of $A$'s truth value. A formula is considered unsatisfiable if no satisfying model exists. 
+
+SMT extends the SAT problem by adding theories, allowing for more complex expressions such as addition, equality, and inequality. Numbers and functions are also allowed in addition to Boolean variables. For example, $f(x) + x > 1$ is an SMT formula, and solving it would require finding the assignments to number $x$ and function $f$ such that the formula holds. Satisfiability, unsatisfiability, and validity also mean the same in SMT solving.
+
+\subsection{SMT Solving in Viper}
+In Viper, we want to check each "assert" statement given some set of assumptions, either from "assume" or explicit axioms. To do so, Viper generates the required verification conditions and gives them to Z3, an SMT solver from Microsoft Research. Generally, we want to check whether assumptions "A" ``entails'' assertion "B", \ie, $A \models B$. Entailment means that for all models $M$ such that $M$ satisfies $A$, then $M$ also satisfies $B$. Consider the following Viper program.
+\begin{lstlisting}
+method smt_example(x: Int) {
+    assume x > 10
+    assert x != 0
+}
+\end{lstlisting}
+We want to solve the entailment $x > 10 \models x \neq 0$. It is known that checking entailment $A \models B$ is equivalent to checking the validity of implication $A \rightarrow B$, which is also equal to checking the unsatisfiability of  $A \land \neg B$. So, for this "smt_example" method, the Viper verifier would give the conditions $x > 10\land \neg( x \neq 0)$ to the Z3 solver to check for unsatisfiability. 
+
+\subsection{Triggers in Quantifiers}
+Viper also allows writing universal quantifiers and existential quantifiers. Universal quantifiers (also called for all quantifiers) are written as $\forall x: \text{Int}. A$ denoting that $A$ holds for all possible integer $x$. Existential quantifiers are written as $\exists x: \text{Int}. A$, denoting that an integer $x$ exists with property $A$.
+
+Universal quantifiers are particularly useful in Viper for writing domain axioms, as in the array encoding domain example below.
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+domain Array {
+  function loc(a: Array, i: Int): Ref
+  function len(a: Array): Int
+
+  axiom len_nonneg {
+    forall a: Array :: { len(a) }
+      len(a) >= 0
+  }
+}
+\end{lstlisting}
+
+Technically, a for-all quantifier represents a possibly infinite conjunction over the quantified type. So, the above axiom is saying 
+\begin{lstlisting}
+len(a_1) >= 0 && len(a_2) >= 0 && len(a_3) >= 0 && ...
+\end{lstlisting}
+including all possible arrays "a_i : Array". The SMT solver cannot instantiate every possible "a_i" from the quantifier, so it instead relies on the trigger, which is enclosed inside the curly braces "{...}". The term "len(a_i) >= 0" will only instantiate as an assumption if elsewhere "len(a_i)" is mentioned. The triggering term could be written in a statement by the user, or could be instantiated by a different axiom. 
+
+\subsection{Choosing Triggers}
+Triggers must be chosen carefully to ensure that the axioms are instantiated when necessary. For example, 
+\begin{lstlisting}
+method not_triggered() {
+    assume forall x: Int :: {f(x)}
+        f(x)
+    assume forall x: Int :: {f(x)}
+        f(x) ==> false
+    assert false 
+}
+\end{lstlisting}
+In the example method "not_triggered", there are two axioms with universal quantifiers; one says that "f(x)" is always true and the other says that "f(x)" implies false, for any integer "x". Together, this should prove false. However, the assertion of false fails because neither axiom ever instantiates; the term "f(x)" does not appear anywhere else. Explicitly writing out any instance "f(x)" would make the proof go through, like in the following example.
+\begin{lstlisting}
+method triggered() {
+    assume forall x: Int :: {f(x)}
+        f(x) ==> false
+    assume forall x: Int :: {f(x)}
+        f(x)
+    var y: Int     // added
+    assert f(y)    // added
+    assert false 
+}
+\end{lstlisting}
+Though we want the quantifier to instantiate whenever necessary, we also want to avoid matching loops, which occur when a term matches a trigger and causes the axiom to instantiate indefinitely. We will discuss controlling matching loops in section ??? where we design our axioms in the plugin.
+
+\section{Other Relevant Viper Features}
+
+% \begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+% field val: Int
+% method modifyVal(r: Ref, i: Int)
+%     requires acc(r.val)
+%     ensures acc(r.val)
+% {   
+%     r.val := i
+% }
+% \end{lstlisting}
+
+% In this example, a field \lstinline{val} gets defined, and the field location \lstinline{r.val} gets modified inside the method. Notice the method's precondition inside the requires clause features an accessibility predicate \lstinline{acc(r.val)}, denoting full permissions to that field location. We discuss more details on permissions in the next section. 
+
+\subsection{Predicates and Functions}
+
+A predicate in Viper is a top-level declaration that represents parameterized assertions. Its definition could contain recursive calls (calls to itself) and resource assertions, such as access to a heap location,\ie, field. A predicate instance could represent access to a heap data structure. For example, we could model a linked list with a predicate as follows:
+
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+field elem: Int
+field next: Ref
+
+predicate list(this: Ref) {
+  acc(this.elem) && acc(this.next) &&
+  (this.next != null ==> list(this.next))
+}
+\end{lstlisting}
+
+The \lstinline|elem| field models the integer stored at each list node, and the \lstinline|next| field models the pointer to the next list node. The list instance with input \lstinline|this| means that we have access to fields \lstinline|elem| and next of \lstinline|this|, and if the \lstinline|next| reference points to a node, we also have the list instance with that node as input. In short, if the predicate \lstinline|list(this)| holds, then we have access to the whole list, starting with node \lstinline|this|. 
+
+Next, we may also be interested in certain properties of the list, such as the sum of all the elements of the list. To express that sum, we use the following function definition:
+
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+function listSum(l: Ref) : Int
+    requires list(l)
+{
+    unfolding list(l) in l.next == null ? l.elem : 
+        l.elem + listSum(l.next)
+}
+\end{lstlisting}
+
+A function defined outside of a domain can have its own body and pre and post-conditions. However, its body must be a pure expression, unlike a method body which may contain a list of statements. A non-domain function in Viper is also called a heap-dependent function because it can access heap elements via fields and permissions.
+
+In the above code snippet, the \lstinline|unfolding| keyword allows the program to access terms inside the predicate instance. In the \lstinline|listSum| function body, we read \lstinline|l|’s next field, whose permissions we acquire from unfolding the predicate \lstinline|list(l)|. It is worth noting that the function is defined recursively to match the recursive structure of the list defined in the \lstinline|list| predicate. Together, predicates and functions allow us to model recursive data structures and describe their properties. However, for random-access data structures, it is more appropriate to use quantified permissions.
+
+\chapter{Design}
+Now that we have explained most of the background information, we proceed to discuss heap-dependent folds. Some of the background details were omitted for brevity, but we will explain them more thoroughly when necessary.
+
+In this chapter, we will formally define heap-dependent folds and discuss the axiomatizations to allow reasoning about them in Viper. Although the design is for Viper, in this chapter we avoid discussing too deeply into the implementation details, keeping things more mathematical. The next chapter will discuss the Viper axioms in more detail, including selecting triggers, controlling instantiations, \etc.
+
+\section{Heap-Dependent Fold}
+We define fold as a function that takes a set of values and returns a value describing a property about the input set. As such, a fold might also be called an aggregate property or a comprehension. For our purposes, the input set of values are values extracted from the heap, so the more precise name is heap-dependent fold.
+
+\subsection{Fold vs Comprehension}
+This should not be confused with set comprehensions, commonly found in maths, or list comprehensions, commonly found in general-purpose programming languages. A list comprehension is a way to construct a new list given an existing list; the result is a list, not a value. Similarly, a set comprehension constructs a set from an existing set. Conversely, a fold will combine values inside a list or set with some pre-defined operation. A fold is more general than a comprehension because the pre-defined operation could also construct a set. Nevertheless, previous literature that discusses the same feature we implement calls it ``comprehension'', so perhaps in the context of program verification, comprehension also describes a fold. 
+
+\subsection{Heap-dependent Fold Definition}
+Consider the following notation for heap-dependent folds.
+Let $$\textrm{fold}_{\sigma}[o]( m(r.F) \mid f)$$
+be the fold over all heap elements defined by filter $f$, receiver $r$, and field $F$, where heap $\sigma$ is the current heap, and operator $o$ is the operator object containing a binary operation $(B, B) \rightarrow B$ and an identity element $i_0 : A$ for that operation. 
+Filter $f$ can be considered a set of unordered elements $A$. The receiver $r$ is a function $A \rightarrow \textrm{Ref}$. The mapping is a function from the field type $V$ to output $B$, \ie, $V\rightarrow B$. Altogether, this expresses an unordered fold, where the binary operation must be commutative and associative. 
+
+Let us discuss heap $\sigma$ in more detail. In Viper, there are two components to the heap in the program state:
+\begin{itemize}
+    \item The heap value map: a total map representing values stored on the heap, typed \lstinline{(Ref, Field A) $\rightarrow$ A}
+    \item The permission mask: a total map representing permissions to each heap location, typed \lstinline{(Ref, Field A) $\rightarrow$ Perm}
+\end{itemize}
+These two can be combined into one partial map $\sigma$, typed \lstinline{(Ref, Field A) $\rightarrow$ A}. When permissions are lost to a heap location, we delete the appropriate keys in $\sigma$. When permissions are gained, we add the new keys to $\sigma$, with unspecified default values. 
+
+At different program points, a heap-dependent fold typically varies only in the heap $\sigma$ and filter $f$. For example, suppose the programmer is interested in the sum of an integer array in the method. The array elements could be modified, changing $\sigma$, or perhaps we can take a subarray, changing filter $f$. So, in contexts where other arguments obviously remain constant or are not relevant to the discussion, we omit $r$, $F$, $m$, $o$, leaving only
+$$\textrm{fold}_{\sigma}(f).$$
+
+\subsubsection{Equality of Heap Snapshots}
+Two folds with two different heap arguments could still be equal if the relevant heap portions are equal, \ie, their snapshots. 
+
+Consider the case when two heap-dependent folds have the same arguments other than the heap \ie, one has heap $\sigma_0$, the other $\sigma_1$. If $$\forall e \in f. \sigma_0[r(e), F] = \sigma_1[r(e), F],$$ then
+$\textrm{fold}_{\sigma_0}(f) = \textrm{fold}_{\sigma_1}(f)$. That is, if two heap-dependent folds differ only in their heap argument and their respective heap portions defined by the filter, receiver, and field are equal, then the two folds are equal. 
+
+We define a heap snapshot as a portion of the heap limited by the filter, receiver, and field. Formally,
+$$\textrm{snap}^{r.F}_{f}(\sigma) = \{ e \rightarrow \textrm{value} \mid ([r(e), F] \rightarrow \textrm{value}) \in \sigma \land e \in f\}.$$ For convenience, we have changed the key from a "[Ref, Field]" to an element of the filter $e \in f$, but it expresses the same thing considering the receiver $r$ is injective with respect to the filter $f$. Also, we removed the field from the key because we specified the field $F$ as the only relevant field. These little details are not completely relevant now, but this snapshot definition will be crucial in the implementation detail of the next chapter.
+
+We write
+$$\textrm{snap}^{r.F}_{f}(\sigma_0) = \textrm{snap}^{r.F}_{f}(\sigma_1)$$ to denote two heaps equal with respect to receiver $r$, field $F$, and filter $f$, \ie, their snapshots are equal. So, $$\forall \sigma_i, \sigma_j \ldotp \textrm{snap}^{r.F}_{f}(\sigma_i) = \textrm{snap}^{r.F}_{f}(\sigma_j) \implies \textrm{fold}_{\sigma_i}(f) = \textrm{fold}_{\sigma_j}(f).$$ 
+
+Technically, one could modify the fold notation to include the snapshot, combining receiver $r$, field $F$, filter $f$, and heap $\sigma$ into one expression: $$\textrm{fold}[o]\{m(\textrm{snap}^{r.F}_{f}(\sigma)\},$$ but we will use our previous notation for consistency.
+
+\subsubsection{Evaluation of Heap-dependent Fold}
+Intuitively, a heap-dependent fold evaluation simply aggregates all values on the heap defined by the filter, receiver expression, and field. The filter produces a set of relevant indices, and the receiver function is applied to those indices, giving a set of references. These references, paired with a field, point to some heap locations, and reading them would give a set of values stored on the heap. Two such values can then be chosen arbitrarily to be combined using the binary operator. The values are combined repeatedly until only one value remains. If there is no value at the very start, the output is the identity $i_0$ of the operator. 
+
+The only addition to this description is the presence of a mapping function. Often, it may be useful to apply a function to each heap value before performing the combine prescribed by the binary operator. For example, suppose we want to collect all the integers stored in a heap chunk into a set. Then, the binary operator should output an integer set, which would require each operator input to be an integer set, as enforced by the operator's type signature $(A, A) \rightarrow A$. However, each heap location stores an integer, which causes a mismatch of types. We can circumvent this by introducing a mapping function that constructs a singleton integer set from an integer.
+
+Altogether, we can abstract the heap-dependent fold operation into 5 steps:
+\begin{enumerate}
+    \item Filter: construct a set of indices that are relevant, as defined by some filtering condition
+    \item Receiver: map the set of indices to a set of references. Each index maps to a different reference; the receiver is injective.
+    \item Field: combine the references with the specified field to get heap locations
+    \item Mapping: read the values stored in the heap locations and apply a mapping function to them.
+    \item Operator: combine the mapped values together using the defined binary operator iteratively until only one value remains.
+\end{enumerate}
+
+The evaluation of a heap-dependent fold is defined recursively as follows:
+\begin{itemize}
+    \item If the filter $f$ is empty, the fold evaluates to $i_0$, where $i_0$ is the identity element.
+    \item If the filter $f$ is a singleton set $\{x\}$, the fold evaluates to $m(r(x).F)$, where $r$ is the receiver function, $F$ is the field, and $m$ is the mapping function.
+    \item If the filter $f$ can be deconstructed such that $f = f_1 \uplus f_2$, where $f_1$, $f_2$ are filters and $\uplus$ represents the disjoint union, then  $$\textrm{fold}_{\sigma}[o]( m(r.F) \mid f)  = \textrm{fold}_{\sigma}[o]( m(r.F) \mid f_1)  \oplus_o \textrm{fold}_{\sigma}[o]( m(r.F) \mid f_2),$$ where $\oplus$ is the infix notation for the binary operator defined by $o$. This rule splits the fold into two and combines them using the binary operator $o$.
+\end{itemize}
+
+The third rule above describes a decomposition, which splits a filter into two smaller filters, $f_1$ and $f_2$. The challenge in reasoning about the fold values is finding the two smaller filters suitable for the decomposition. In practice, we only find one smaller filter $f_1$. If we have an existing filter $f$ and find a subset $f_1$ of $f$, we can derive an $f_2$ as a set-minus, \ie, $f_2 = f - f_1$. 
+
+However, there is an unbounded number of indices for an unbounded data structure. Exploring every possible decomposition given an unbounded set of indices is impractical. This is one key challenge to our design in Viper.
+
+\subsection{Well-definedness Requirements}
+There are a couple of requirements to make the heap-dependent fold sound. Firstly, the types have to match. The filter $f$ must have type $\textrm{Set}[A]$, and the receiver has type $A \rightarrow \textrm{Ref}$, and given that the field has type $V$, the mapping has type $V \rightarrow B$. The binary operator then has type $(B, B) \rightarrow B$ and has an identity typed $B$. Implementation-wise, this all gets encoded as part of the Viper language typechecker. 
+
+There are other requirements that need to be checked separately by the SMT solver:
+\subsubsection{Operator must be associative, commutative, and have an identity}
+In an unordered fold, each element in the input set can be combined in any arbitrary order, mimicking the random access nature of a data structure. So, the operator must be provably associative and commutative. 
+
+In the case where the input set is empty, the fold must still be evaluated to a value for soundness. Following the third rule of a fold evaluation, \ie the decomposition rule, we can always decompose a filter into itself and the empty set. So,
+$$\textrm{fold}_{\sigma}(f) = \textrm{fold}_{\sigma}(f) \oplus \textrm{fold}_{\sigma}(\{\})$$ would hold for all $f$ if the fold on the empty set evaluates to the identity of the operator. 
+
+\subsubsection{Receiver must be injective on the filter}
+Each element of the filter set must map to a different reference. This gets checked as a function precondition in the Viper encoding. This greatly simplifies the implementation because each heap location maps to one element in the filter. If one heap location gets reassigned, the decomposition would involve extracting that one element from the original filter.
+
+We designed our feature to work mostly with quantified permissions, which already require the injectivity of the receiver in Viper. So, this requirement is not really an additional restriction, provided the user intends to use quantified permissions.
+
+\subsubsection{Current state must have enough permissions to all heap locations defined by the filter and receiver}
+A Viper method cannot read values from heap locations it does not have permission to. So, a fold can only be evaluated at a program point if it has permissions to all the heap locations defined by filter $f$ and receiver $r$.
+
+Technically, in Viper, the heap and permissions are separate maps. However, we have overloaded our heap notation $\sigma$ as a partial heap representing both the heap and the permissions. If permissions have changed, then we consider the heap $\sigma$ to have changed too. One can think of $\sigma$ as representing the heap portion with permissions.
+
+\subsection{Connection to Quantified Permissions}
+Recall that quantified permissions in Viper have the canonical form "forall x: T :: c(x) => acc(r(x).F, p(x))". Some design choices were adopted from this to heap-dependent folds.
+
+\begin{enumerate}
+    \item The filter set $f$ is analogous to "forall x: T :: c(x)", which defines a set of elements typed "T".
+    \item The receiver function $r$ is an abstraction of the receiver expression "r(x)" in quantified permissions.
+    \item Field $F$ denote the relevant field.
+    \item Receivers $r$ must be injective in both quantified permissions and heap-dependent folds, with respect to filter $f$ representing boolean expression "c(x)." 
+\end{enumerate}
+
+\section{Singleton Decomposition}
+Suppose we have a heap-dependent fold $$\textrm{fold}_{\sigma_0}[o]( m(r.F) \mid f)$$ at a program point with heap $\sigma_0$. Given that we do not modify any other argument, we abbreviate this as $$\textrm{fold}_{\sigma_0}(f).$$ Suppose the heap has been modified, and at a new program point, we have heap $\sigma_1$. What are some facts that we can deduce about $\textrm{fold}_{\sigma_0}(f)$ and $\textrm{fold}_{\sigma_1}(f)$?
+
+To answer this, we consider scenarios where the heap can be changed in Viper. There are only three such scenarios.
+\begin{enumerate}
+    \item A heap location gets explicitly reassigned with the ":=" operator, \eg, "r.val := 0"
+    \item The program state exhales permissions to a portion of the heap. 
+    \item The program state inhales permissions to a portion of the heap. 
+\end{enumerate}
+A method call is considered a combination of scenarios 2 and 3 because the Viper verifier abstracts a method call as exhales and inhales. The first scenario is quite straightforward, while the two latter ones are more tricky. Losing and gaining permissions technically does not modify the heap, but instead the permission mask of the heap. However, in our formalization, we use $\sigma$ to denote the partial map of the heap portion with permissions, which will have changed after inhales and exhales. 
+
+Consider an example of the first scenario. Suppose we are interested in a fold with the sum operator $o_{sum}$, which is a binary operator with identity 0. Let the mapping $m$ be the identity function, so $m(A) = A$. Then, suppose we have an arbitrary $i \in f$ and encounter a reassignment "r(i).F := r(i).F + 1 ". Suppose also that the current method has permissions to all heap locations defined by filter $f$.  Let the heap prior to the reassignment be $\sigma_0$, and the heap after is $\sigma_1$. Intuitively, we can see that the sum over filter $f$ and receiver $r$ must now be 1 larger than previously. 
+
+Now, suppose the user writes an assertion to check:
+$$ \textrm{fold}_{\sigma_1}[o_{sum}](f) = \textrm{fold}_{\sigma_0}[o_{sum}](f) + 1.$$
+
+To prove this, we can construct a new filter by removing element $i$ from the original filter $f$. This gives us the decomposition of $f$:
+$$f = \left( f - \{i\}\right) \uplus \{i\}$$
+
+With this decomposition, we can use the third rule of evaluating a heap-dependent fold, which gives, for $\sigma_0$
+$$\textrm{fold}_{\sigma_0}(f) = \textrm{fold}_{\sigma_0}(f - \{i\}) \oplus_{sum} \textrm{fold}_{\sigma_0}(\{i\})$$ and similarly for $\sigma_1$,
+$$\textrm{fold}_{\sigma_1}(f) = \textrm{fold}_{\sigma_1}(f - \{i\}) \oplus_{sum} \textrm{fold}_{\sigma_1}(\{i\}).$$  
+
+Notice, however, that $\textrm{fold}_{\sigma_0}(f - \{i\})$ and $\textrm{fold}_{\sigma_1}(f - \{i\})$ are equal, because only heap location "r(i).F" has been modified. Filter set $f - \{i\}$ does not include element $i$, so the heaps $\sigma_0$ and $\sigma_1$ are identical with respect to this filter. Formally, we know that 
+$$\forall e \in \left(f - \{i\}\right). \sigma_0[r(e), F] =  \sigma_1[r(e), F],$$ \ie, the heap portions defined by the filter are equal. Or in order words, $$\textrm{snap}^{r.F}_{f - \{i\}}(\sigma_0) = \textrm{snap}^{r.F}_{f - \{i\}}(\sigma_1).$$
+
+We need injectivity to derive this equality. $r(i)$ maps to a unique reference, and injectivity guarantees that there is no other $j \in f \land j \neq i$ such that $r(i) = r(j)$. So, removing $i$ from $f$ means nothing else points to the same reference.
+
+Furthermore, Viper permissions also guarantee that no other state change has occurred during the reassignment and that $\sigma_0$ and $\sigma_1$ differ only at $r(i).F$. Remember that we assumed the current method holds permissions to all heap locations defined by the filter, which means nothing else could modify these locations other than the method. 
+
+Next, consider the second fold with the second filter in our decomposition, $\textrm{fold}_{\sigma_0}(\{i\})$. The filter is a singleton, so by definition of a heap-dependent fold, this evaluates to $\sigma_0[r(i),F]$ (the mapping is the identity function). Similarly, we consider $\textrm{fold}_{\sigma_1}(\{i\})$, which evaluates to $\sigma_1[r(i),F]$. Now, recall the two heaps occur before and after the reassignment "r(i).F := r(i).F + 1 ". By definition of the reassignment, we know 
+$$\sigma_1[r(i),F] = \sigma_0[r(i),F] + 1.$$
+
+So, $\textrm{fold}_{\sigma_1}(\{i\}) = \textrm{fold}_{\sigma_0}(\{i\}) + 1,$. Substituting these equalities into the decomposition of $\textrm{fold}_{\sigma_1}(f)$, we get
+\begin{align*} 
+\textrm{fold}_{\sigma_1}(f) &= \textrm{fold}_{\sigma_1}(f - \{i\}) \oplus_{sum} \textrm{fold}_{\sigma_1}(\{i\}) \\
+\textrm{fold}_{\sigma_1}(f) &= \textrm{fold}_{\sigma_0}(f - \{i\}) \oplus_{sum} (\textrm{fold}_{\sigma_0}(\{i\}) + 1) \\
+\textrm{fold}_{\sigma_1}(f) &= \textrm{fold}_{\sigma_0}(f) + 1 
+\end{align*}
+We use the associativity of addition in that last step. 
+
+So, we have proven what we wanted.
+Let us recall the steps of our proof to relate the fold prior to the heap change to the fold after:
+\begin{enumerate}
+    \item Start with some $\textrm{fold}_{\sigma_0}(f)$
+    \item The heap $\sigma_0$ encounters a modification to some location "r(i).F", which produces a new heap $\sigma_1$
+    \item Perform a decomposition on the filter $f$ to extract two filters. The first filter denotes the portion of the heap unchanged. The second filter denotes the portion changed. In our example, we split $f$ into $\left( f - \{i\}\right) \uplus \{i\} $.
+    \item Use the third evaluation rule of fold, which gives $\textrm{fold}_{\sigma_1}(f) = \textrm{fold}_{\sigma_1}(f - \{i\}) \oplus_{sum} \textrm{fold}_{\sigma_1}(\{i\}) $, and the same for $\sigma_0$.
+    \item Prove that $\textrm{fold}_{\sigma_1}(f - \{i\}) = \textrm{fold}_{\sigma_0}(f - \{i\})$ using injectivity and Viper permissions.
+    \item Prove that $\textrm{fold}_{\sigma_1}(\{i\}) = \textrm{fold}_{\sigma_0}(\{i\}) + 1$ using the second evaluation rule of fold, \ie, the singleton rule.
+    \item Substitute equalities to deduce $$\textrm{fold}_{\sigma_1}(f) = \textrm{fold}_{\sigma_0}(f) + 1$$
+\end{enumerate}
+Notice that we did not need to use induction. 
+
+\subsection{Combinatorial Explosion from Chained Singleton Decomposition}
+Although the simple strategy described previously can handle a singleton heap reassignment, it can cause a combinatorial explosion when many reassignments are chained together. Consider a situation where repeated reassignments are made. Suppose we have a filter $f$ and two arbitrary integers $i, j \in f$. Then, consider a method which performs three consecutive reassignments to the heap locations of each index.
+\begin{lstlisting}
+{
+    ...
+    r(i).F := r(i).F + 1 
+    r(j).F := r(j).F + 1 
+}
+\end{lstlisting}
+
+Again, we want to prove that $$\textrm{fold}_{\sigma_2}(f) = \textrm{fold}_{\sigma_0}(f) + 2 $$ where $\sigma_0$ is the heap at the start, and $\sigma_2$ is the heap after the reassignments. Assume that the operator is addition and the mapping is the identity function.
+
+Employing the same strategy, we could split the filter $f$ by removing each of $i$ and $j$.
+\begin{align*} 
+f &= \left( f - \{i\}\right) \uplus \{i\} \\
+f &= \left( f - \{j\}\right) \uplus \{j\} \\
+\end{align*}
+
+However, this is insufficient, because neither $$\textrm{snap}^{r.F}_{f - \{i\}}(\sigma_0) = \textrm{snap}^{r.F}_{f - \{i\}}(\sigma_2)$$ nor $$\textrm{snap}^{r.F}_{f - \{j\}}(\sigma_0) = \textrm{snap}^{r.F}_{f - \{j\}}(\sigma_2).$$
+The new filters do not create heap portions that are equal. We must extract both $i$ and $j$ from the filter. So, we need to allow repeated decomposition of filters that were themselves generated from a decomposition.
+
+Repeated decomposition is very costly because the number of filters tends to grow exponentially or even worse. If we take the generated filters $(f - \{i\}), \{i\},  ( f - \{j\},  \{j\}$ and decompose them again, we potentially get eight new filters.
+\begin{align*} 
+\left( f - \{i\}\right) &= 
+        \left( f - \{i\} - \{i\}\right) \uplus \{\} \\
+\left( f - \{i\}\right) &= 
+        \left( f - \{i\} - \{j\}\right) \uplus \{j\} \\
+\left( f - \{j\}\right) &= 
+        \left( f - \{j\} - \{j\}\right) \uplus \{\} \\
+\left( f - \{j\}\right) &= 
+        \left( f - \{j\} - \{i\}\right) \uplus \{i\} \\
+\left(\{i\}\right) &= 
+        \left(\{i\} - \{i\}\right) \uplus \{i\} \\
+\left(\{i\}\right) &= 
+        \left(\{i\} - \{j\}\right) \uplus \{j\} \\
+\left(\{j\}\right) &= 
+        \left(\{j\} - \{j\}\right) \uplus \{j\} \\
+\left(\{j\}\right) &= 
+        \left(\{j\} - \{i\}\right) \uplus \{i\} \\
+\end{align*}
+
+Some of the above equations may be ill-defined. Recall that to decompose filter $f$ correctly, we need $f_1$ such that $f_1 \subseteq f$. Then we can write $f = (f - f_1) \uplus f_1.$ Sometimes, it is unclear whether $f_1$ is a subset, so in practice, the SMT solver will case-split and try both options. One case might assume $f_1 \not\subseteq f$. In such cases, the ill-defined decomposition equations are not generated. 
+
+For example, $i$ and $j$ may or may not be the same integer. So whether the subset property $\{j\} \subseteq f - \{i\}$ holds is unclear. Nevertheless, these decompositions may happen in one case, so we write them explicitly above.
+
+Some of the equations are well-defined but do not introduce any new information. For example, we can see $\left( f - \{i\} - \{i\}\right)$ should be equal to $\left( f - \{i\}\right)$, because $i$ has already been subtracted from $f$. However, the set axiomizations in Viper still perform a case split here. The case assuming $\{i\} \subseteq f - \{i\} - \{i\}$ will lead to a contradiction eventually, but this decomposition still spawns. 
+
+We can repeatedly decompose further until we have 16 new filters in addition to $f$:
+\begin{align*} 
+&f \\
+&f - \{i\}  \\
+&f - \{j\}  \\
+&f - \{i\} - \{i\}   \\
+&f - \{i\} - \{j\}   \\
+&f - \{j\} - \{i\}   \\
+&f - \{j\} - \{j\}   \\
+&f - \{i\} - \{j\} - \{i\}   \\
+&f - \{i\} - \{j\} - \{j\}   \\
+&f - \{j\} - \{i\} - \{i\}  \\
+&f - \{j\} - \{i\} - \{j\}  \\
+&\{i\}  \\
+&\{j\}  \\
+&\{i\} -\{i\}  \\
+&\{i\} -\{j\}  \\
+&\{j\} -\{i\}  \\
+&\{j\} -\{j\}  
+\end{align*}
+Recall that for each of these filters, there are still two folds, each with heap $\sigma_0$ and $\sigma_2$. So, there are at least 32 new folds created from the decomposition. 
+
+This is a very large number, and we already removed some of the filters. For example, $f - \{i\} - \{i\} - \{i\}$ will not be a generated filter because we assume the SMT solver could prove $f - \{i\} - \{i\} = f - \{i\}$ immediately, discarding potential decompositions from that filter.
+
+In practice, the SMT solver case-splitting makes this filter decomposition performance even worse. As we have explained briefly, the SMT solver has to check if $f_1 \subseteq f$ before producing $f = f_1 \uplus (f - f_1)$. This creates a case split in the proof, and each case may have its own filter decompositions. For simplicity, we can assume the number of filters doubles at each branch. Nested case splits can also happen, so the total number of folds could increase by a factor of $2^n$ for $n$ case splits. 
+
+The number of case splits will also increase by the number of reassignments. At least, there must be one case split on the equality between each index of the reassignment. For our example, we have two indices, $i$ and $j$. The SMT solver needs to check $i = j$, giving one case split. If we have three indices $i,j,k$, the solver checks $i=j$, $i=k$, and $k=j$, giving three case splits. So, the number of case splits is equal to $m$ choose 2, where $m$ is the number of indices in the reassignments.
+
+Though we have not formally proven the total number of filters, it obviously is very large. This example illustrates the problem with allowing repeated decomposition. We have tried running examples with three reassignments with operator ":=" using this naive strategy; Viper fails its verification, timing out at 100 seconds. Given three reassignments already timeout the verifier, it's clear that there are simply too many decompositions.
+
+\subsection{Possible Optimization}
+We tried adding optimizations to Viper's built-in set axioms. For example, we can observe that for any set $f$, $f - \{i\} - \{i\} = f - \{i\}$, or that $f - \{j\} - \{i\} = f - \{i\} - \{j\}$ (right commutativity of set minus). After we add these as axioms, Viper can verify folds inside methods with 3 reassignments but still timeouts again at 4.
+
+\section{Local and Intermediate Decomposition}
+A solution to the combinatorial explosion is using local and intermediate decompositions, allowing modular handling of each heap modification. There were two main causes of the explosion.
+\begin{enumerate}
+    \item Chained decomposition: a filter generated from a decomposition gets decomposed further.
+    \item SMT solver case splitting: the SMT solver case splits on the pairwise equality of each index getting reassigned. Each case split doubles the number of filters.
+\end{enumerate}
+
+Once again, we consider the example with two reassignments, where the fold operator is addition, and the mapping is the identity function. 
+\begin{lstlisting}
+{
+    ...
+    r(i).F := r(i).F + 1 
+    r(j).F := r(j).F + 1 
+}
+\end{lstlisting}
+We want to prove that $$\textrm{fold}_{\sigma_2}(f) = \textrm{fold}_{\sigma_0}(f) + 2.$$
+
+The key observation is that this is simply the example with one reassignment appended together. So, let us declare an intermediate heap $\sigma_1$, representing the heap state after the first assignment "r(i).F := r(i).F + 1". Then, the problem can be split up into proving 
+$$\textrm{fold}_{\sigma_1}(f) = \textrm{fold}_{\sigma_0}(f) + 1 $$ and $$\textrm{fold}_{\sigma_2}(f) = \textrm{fold}_{\sigma_1}(f) + 1. $$ 
+
+For the first equation, we need to perform only one decomposition of the filter $f$, \ie, $f = (f - \{i\}) \uplus \{i\}$ which gives one decomposition for each of $\sigma_1$ and $\sigma_0$. For the second equation, we again perform only one decomposition of the filter $f$, \ie, $f = (f - \{j\}) \uplus \{j\}$, which gives one decomposition for each of $\sigma_2$ and $\sigma_1$. Note that the decomposition removing $\{j\}$ does not happen with respect to $\textrm{fold}_{\sigma_0}(f)$, and the decomposition removing $\{i\}$ does not happen with respect to $\textrm{fold}_{\sigma_2}(f)$
+
+We call this strategy the local and intermediate decomposition. First, after each heap reassignment to some index $i$, we introduce an intermediate heap $\sigma_j$ and a heap-dependent fold with argument $\sigma_j$. So, at each atomic heap modification, we have $\sigma_i$ and $\sigma_j$ representing the heap before and after the modification. Then, we locally decompose the two folds by subtracting $i$ from filter $f$, giving $$\textrm{fold}_{\sigma_i}(f) = \textrm{fold}_{\sigma_i}(f - \{i\}) \oplus \textrm{fold}_{\sigma_i}(\{i\})$$ and the same for $\sigma_j$.
+Finally, for each reassignment, we can deduce an intermediate equality 
+$$ \textrm{fold}_{\sigma_j}(f) = \textrm{fold}_{\sigma_i}(f) ...,$$ and these intermediate equality could chain together to prove properties comparing folds after arbitrary many reassignments. 
+
+The folds generated from a decomposition should not be further decomposed for performance reasons explained previously. As such, we distinguish between a primary and a secondary fold. A primary fold is a fold that can be decomposed; these folds are generally folds written explicitly by the user or are generated as an intermediate fold by our strategy. A secondary fold is a fold generated by a decomposition, so the user will not directly mention it. Secondary folds do not get decomposed, while primary folds do. This greatly lowers the performance cost of our implementation. In our example, $\textrm{fold}_{\sigma_i}(f)$ is primary, and the generated fold $\textrm{fold}_{\sigma_i}(f - \{i\})$ is secondary. From hereon, when talking about decomposing a fold, we implicitly mean these primary folds.
+
+There is a reason why we describe the strategy as intermediate and local decompositions.
+\begin{enumerate}
+    \item Intermediate: we introduce intermediate heaps in addition to the heaps we initially wrote.
+    \item Local: the decomposition applies only to the folds with heap arguments representing the state prior and after the assignment, \ie, only two states. 
+\end{enumerate}
+
+\subsection{Modular Strategy: Nodes and Edges}
+Intermediate and local decompositions allow modular handling at each heap modification. Only the heaps directly before and after the modification, \ie, $\sigma_i$ and $\sigma_j$, are relevant at each step.
+
+With this modular strategy, the number of decompositions grows linearly with the number of heap assignments, which is a huge improvement. We no longer need to repeatedly decompose a filter generated from a decomposition, and there are no case splits on the equality of indices. Indices are instead handled separately and local to each reassignment.
+
+However, there are some requirements to make this work. Think of each primary fold as trickling down through each node in the method, where each node is a heap-modifying statement. So, to relate the (primary) fold at the start of the method $\textrm{fold}_{\sigma_a}$ to some fold at the end $\textrm{fold}_{\sigma_z}$, there must be a path linking $\textrm{fold}_{\sigma_a}$ to $\textrm{fold}_{\sigma_z}$. Each node is responsible for generating its own local path.
+
+For example, we can relate $\textrm{fold}_{\sigma_0}$ to $\textrm{fold}_{\sigma_2}$ in the earlier example because at each reassignment, we related $\textrm{fold}_{\sigma_0}$ to $\textrm{fold}_{\sigma_1}$ and $\textrm{fold}_{\sigma_1}$ to $\textrm{fold}_{\sigma_2}$, so there is a path between the start and end. Relating $\textrm{fold}_{\sigma_0}$ to $\textrm{fold}_{\sigma_1}$ amounts to decomposing each fold by removing index $i$ for their respective filters, which allows deducing $\textrm{fold}_{\sigma_1} = \textrm{fold}_{\sigma_0} + 1$. Likewise, for the next reassignment, we decompose each fold $\textrm{fold}_{\sigma_1}$ and $\textrm{fold}_{\sigma_2}$ by removing index $j$ from their respective filters, which allows deducing $\textrm{fold}_{\sigma_2} = \textrm{fold}_{\sigma_1} + 1$. 
+
+
+So, the rules of this modular strategy are as follows:
+\begin{enumerate}
+    \item Each heap-modifying operation is a node
+    \item Each (primary) fold in the heap state before the heap-modifying operation is a directed edge into the node, a  \emph{fold input}. For example, if a statement "A" mutates the heap from $\sigma_i$ to $\sigma_j$, then $\textrm{fold}_{\sigma_i}$ is an edge into the node.
+    \item Each heap-modifying operation generates a new intermediate fold, considered a directed edge out of the node, or a \emph{fold output}. This fold is also considered primary. An exception is if the user writes the fold directly at the heap state $\sigma_j$. Then, this is not an out-edge, as it is not an intermediate fold generated by our strategy.
+    \item The folds in and folds out are both decomposed with some node-specific rule. This allows us to establish some relation between the folds in and out.
+\end{enumerate}
+
+We will employ this strategy for the rest of the thesis. Next, we extend it further to handle "exhale" and "inhale", the two other heap-modifying operations. The challenge will be defining exactly what goes in and out of these two nodes.
+
+So far, the strategy for each heap-modifying node are:
+\begin{enumerate}
+    \item Reassignment $r(i).F := ...$, mutating heap from $\sigma_i$ to $\sigma_j$: 
+    If fold input is $\textrm{fold}_{\sigma_i}(f)$, then fold output is $\textrm{fold}_{\sigma_j}(f)$. 
+    Decompose by removing $i$ from both folds.
+    \item Exhale: ...
+    \item Inhale: ...
+\end{enumerate}
+
+\subsection{Example Combining Exhales and Inhales}
+
+Before we explain the handling of inhale and exhale statements, consider the following example. Suppose we have a filter $f$ of type "Set[Int]" and a subset $f_1 \subset f$. Suppose also we have an integer $a$ in $f$ but is not part of $f_1$, \ie, $a \in f \land a \not\in f_1$. Then, consider the next lines of code.
+\begin{lstlisting}
+method exhale_reassign_inhale() {
+    ...
+    // Exhale, changes heap state from 0 to 1
+    exhale forall i: Int :: i in f1 => acc(r(i).val)
+    // Reassignment, changes heap state from 1 to 2
+    r(a).val := r(a).val + 1
+    // Inhale and assume nothing changed
+    // , changes heap state from 2 to 3
+    inhale forall i: Int :: i in f1 => 
+            acc(r(i).val) && r(i).val == old(r(i).val)
+
+    // Pseudocode asserting change in the fold
+    assert fold[sum](f) = old(fold[sum](f)) + 1 
+}
+\end{lstlisting}
+The assertion at the end aims to prove 
+$$\textrm{fold}_{\sigma_{3}}(f) = \textrm{fold}_{\sigma_{0}}(f) + 1.$$ Note how the users only explicitly mention heap states $\sigma_{0}$ and $\sigma_{3}$, \ie, the heap states at the start and end. All other heap states are considered intermediate.
+
+Following our local and intermediate decomposition plan, we need a fold in the state right before each heap modifying operation. So, for the reassignment, we need a fold input $\textrm{fold}_{\sigma_{1}}(f)$ to generate fold output $\textrm{fold}_{\sigma_{2}}(f)$. The input fold should be generated as an output fold of the exhale statement. However, things get tricky because $\textrm{fold}_{\sigma_{1}}(f)$ might not even be well-defined with regard to permissions. 
+
+\section{Exhale Case}
+The second way that the heap could be modified is through an exhale statement. An exhale statement containing an accessibility predicate "acc(A)" would result in losing the permissions to "A." In addition, an exhale statement could also contain quantified permissions, which would mean losing an unbounded amount of permissions to the locations under the quantifier. 
+
+Consider the statement 
+\begin{lstlisting}
+{
+    exhale P
+}
+\end{lstlisting}
+where "P" may contain accessibility predicates and quantified permissions. Let the heap immediately prior to this statement be $\sigma_0$, and the heap immediately after is $\sigma_1$. Suppose, we are interested in the folds $\textrm{fold}_{\sigma_0}[o]( m(r.F) \mid f)$ with the addition operator $o$ and the identity mapping $m$. After the exhale, we want to know how it evolves into $\textrm{fold}_{\sigma_1}[o]( m(r.F) \mid f)$.
+
+\subsection{Well-definedness Problem After Losing Permissions}
+Before we can even discuss these folds, there is a potential well-definedness problem. Even if $\textrm{fold}_{\sigma_0}[o]( m(r.F) \mid f)$ is well-defined, the second fold might not be. $\sigma_1$ may not have all the permissions to all the heap locations defined by filter $f$, receiver $r$, and field $F$, because the exhale might have given permissions away. For example, suppose the statement is "exhale acc(r(i).val)" to some $i \in f$. Then, by the semantics of exhales, the heap $\sigma_1$ does not contain permissions to key "(r(i), val)", and $\textrm{fold}_{\sigma_1}[o]( m(r.F) \mid f)$ would be ill-defined!
+
+\subsection{Modular Design to Handle Exhales}
+Remember that we still want to consider each heap modification modularly. As discussed in the previous section, we consider a heap-modifying line of code as a node, and for every fold coming in, there must be a fold going out. Additionally, the node should perform a decomposition on each fold, both in and out, to establish a relationship between them. Altogether, this allows us to link two folds from the start of the method to the end. So, if $\textrm{fold}_{\sigma_0}[o]( m(r.F) \mid f)$ enters the "exhale" node, what should come out? And what decompositions does the node do to the folds?
+
+To answer the first question, we need to define a new $f'$ such that $\textrm{fold}_{\sigma_1}(f')$ is well-defined. We can do that by removing all the heap locations without permission as a result of the exhale. 
+
+\subsubsection{Defining a Well-Defined Output Fold}
+Let $\sigma_0.\textrm{keys}(F)$ represent the set of "Ref" keys in heap $\sigma_0$ with some field $F$. Recall that we represent the heap as a partial map typed \lstinline{(Ref, Field A) $\rightarrow$ A}, which has tuple keys of the form "(Ref, Field A)". So, think of this $\textrm{keys}(F)$ function as extracting the tuple keys from the heap, filtering the tuple such that the second element is equal to $F$, and outputting the first element typed "Ref" of the remaining tuples. Recall that each key on $\sigma_0$ exists if and only if the method has permissions to that heap location at the program point.
+
+Then, we define 
+$$L := \sigma_0.\textrm{keys}(F) - \sigma_1.\textrm{keys}(F),$$
+\ie, let $L$ be the set of references that the exhale gave away permissions to, with respect to field $F$. Then, we define the filter of remaining elements $f'$ as
+$$f' := \{e \in f | r(e) \not\in L \},$$ where $r$ is the receiver function. By definition, $f'$ guarantees that $\textrm{fold}_{\sigma_1}(f')$ is well-defined with regards to permissions. 
+
+\subsubsection{Decomposition of In and Out Folds}
+Next, we decide the decomposition of the folds in and out of the exhale node. For the fold input, \ie, $\textrm{fold}_{\sigma_0}(f)$,  there is one obvious contender. We can decompose $f$ using $f'$! By definition,  $f'$ is a subset of $f$, which gives us the decomposition $f = f' \uplus (f-f')$. Applying this to the fold evaluation, we get the fold decomposition
+$$\textrm{fold}_{\sigma_0}(f) = \textrm{fold}_{\sigma_0}(f') \oplus \textrm{fold}_{\sigma_0}(f - f').$$ Keep in mind that the folds on the RHS of that equation are secondary folds, so they do not get decomposed any further and are not considered as a directed edge for future heap-modifying nodes.
+
+For the fold output $\textrm{fold}_{\sigma_1}(f')$, there is no decomposition needed. By permission framing, we know that $\textrm{fold}_{\sigma_1}(f') = \textrm{fold}_{\sigma_0}(f')$ because the method holds permissions to all elements defined by $f'$ across the "exhale" statement, and the exhale will not have modified any of those elements unlike the explicit reassignment ":=". However, by explicitly declaring $\textrm{fold}_{\sigma_1}(f')$ as a fold output, we have elevated it from being a secondary fold in $\textrm{fold}_{\sigma_0}(f')$ to a primary fold $\textrm{fold}_{\sigma_1}(f')$. That means the filter $f'$ could become a candidate for decomposition in future heaps.
+
+So, we update the strategy for heap-modifying nodes.
+\begin{enumerate}
+    \item Reassignment $r(i).F := ...$, mutating heap from $\sigma_i$ to $\sigma_j$: 
+    If fold input is $\textrm{fold}_{\sigma_i}(f)$, then fold output is $\textrm{fold}_{\sigma_j}(f)$. 
+    Decompose by removing $i$ from both folds.
+    \item Exhale, mutating heap from $\sigma_i$ to $\sigma_j$ via permission loss. If fold input is $\textrm{fold}_{\sigma_i}(f)$, then fold output is $\textrm{fold}_{\sigma_j}(f')$ where $f'$ is the subset of $f$ where permissions were not lost. Decompose by subtracting $f'$ from $f$ for the fold inputs. Fold outputs do not need a decomposition.
+    \item Inhale: ...
+\end{enumerate}
+
+This strategy creates the flow of folds as part of the modular strategy design. Should there be a heap assignment after an exhale statement, the exhale strategy outputs a fold as input to the corresponding node. For example,
+\begin{lstlisting}
+    exhale acc(r(i).val)
+    r(j).val := r(j).val + 5
+\end{lstlisting}
+This code snippet has two heap-modifying nodes. If the fold input to the first "exhale" node is $\textrm{fold}_{\sigma_0}(f)$, then the fold output to the same node is $\textrm{fold}_{\sigma_1}(f')$, which itself is a fold input to the ":=" node.
+
+In addition to continuing the data flow, this exhale strategy can also prove some interesting examples in isolation. Suppose we have an arbitrary subset $f'' \subseteq f$. Then, suppose the user assumes, through some assume statement or requires clause, $\textrm{fold}_{\sigma_0}[\textit{sum}](f'') = 7$ and $\textrm{fold}_{\sigma_0}[\textit{sum}](f) = 10$. Then, there is the statement 
+"exhale forall i: A :: i in f'' => acc(r(i).F)", which translates to exhaling all elements of filter $f''$. 
+
+The user now wants to prove $\textrm{fold}_{\sigma_1}[\textit{sum}](f - f'') = 3$ in an assert statement. This works because from our strategy, we will have generated the equations
+$$\textrm{fold}_{\sigma_0}[\textit{sum}](f) = \textrm{fold}_{\sigma_0}[\textit{sum}](f') + \textrm{fold}_{\sigma_0}[\textit{sum}](f - f'), $$ and
+$$\textrm{fold}_{\sigma_1}[\textit{sum}](f') = \textrm{fold}_{\sigma_0}[\textit{sum}](f'). $$
+We also know that $f' = f - f''$ and $f - f' = f''$. From equational reasoning, we deduce
+\begin{align*} 
+\textrm{fold}_{\sigma_0}[\textit{sum}](f) &= \textrm{fold}_{\sigma_0}[\textit{sum}](f - f'') + \textrm{fold}_{\sigma_0}[\textit{sum}](f'') \\
+10 &= \textrm{fold}_{\sigma_0}[\textit{sum}](f - f'') + 7 \\
+\textrm{fold}_{\sigma_0}[\textit{sum}](f - f'') &= \textrm{fold}_{\sigma_1}[\textit{sum}](f - f'') = 3. 
+\end{align*}
+In practice, however, the equalities $f' = f - f''$ and $f - f' = f''$ are not so obvious to the SMT solver, and they require some explicit extensional equality checks. We will discuss this more in a future chapter.
+
+The exhale strategy allows for reasoning through its decomposition, while also generating intermediate folds as inputs for further heap mutation nodes.
+
+\section{Inhale Case}
+Now, we consider the last scenario of heap mutation, the inhale statement, which may add permissions and new keys to the heap $\sigma$. 
+
+Intuitively, an inhale is the opposite of an exhale. In our exhale strategy, we start with input fold $\textrm{fold}_{\sigma_{in}}(f)$, lose some permissions, construct a new filter $f' \subseteq f$ where permissions are retained, decompose the initial fold by subtracting the new filter $f'$, and finally, generate an intermediate fold out $\textrm{fold}_{\sigma_{out}}(f')$. 
+
+In an inhale strategy, we could simply do it the reversed way. We could start with some input fold $\textrm{fold}_{\sigma_{in}}(f)$, gain some permissions, find a larger filter $f^* \supseteq f$ where $f^*$ includes items from the gained permissions, generate an output fold $\textrm{fold}_{\sigma_{out}}(f^*)$, and then decompose this new output fold by subtracting the input filter $f$.
+
+There are two main questions regarding this.
+\begin{enumerate}
+    \item How do we know what $f^*$ to construct?
+    \item Is this enough?
+\end{enumerate}
+
+\subsection{Finding the Output Fold Filter $f^*$}
+Picking which $f^*$ to construct from a smaller filter $f$ is not so obvious. One viable idea is to construct the set of all heap locations gained from the inhale, extract a filter set out of that, and union it to $f$. 
+
+However, this idea is problematic when the amount of permissions gained exceeds the filter of interest. For example, consider the following snippet.
+\begin{lstlisting}
+method test()
+    requires forall i: Int:: i in f => acc(r(i).F)
+{
+    exhale forall i: Int:: i in f_1 => acc(r(i).F)
+    label a
+    
+    assume e in (f - f1)
+    r(e).F := r(e).F + 1
+    label b
+    
+    inhale forall i: Int:: i in f_1 || i in f_2 => acc(r(i).F) 
+    inhale forall i: Int:: i in f_1 => r(i).F == old(r(i.F))
+            
+    label c
+    assert fold[sum](f) = old(fold[sum](f) + 1)
+
+}
+\end{lstlisting}
+Suppose that $r$ is an injective receiver, and the filters $f$ and $f_1 \subset f$. Also, suppose $f_2$ is disjoint from filter $f$. So, in the code snippet, we start with permission to elements defined by filter $f$. Then, an exhale happens, removing permissions to filter $f_1$. Then, a reassignment happens to some arbitrary heap location defined by $e \in (f - f_1)$. Then, an inhale happens, where the method gets permissions to elements defined by filters $f_1$ and $f_2$. Another inhale assumes that all the heap elements defined by $f_1$ remain unchanged throughout this whole process (framing axiom). We now want to prove that 
+$$\textrm{fold}_{\sigma_{c}}(f) = \textrm{fold}_{\sigma_{old}}(f) + 1$$
+
+If we use the modular strategy, we can think of folds as inputs and outputs to heap modifying nodes. In our example, the first exhale node has input $\textrm{fold}_{\sigma_{old}}(f)$, and output fold $\textrm{fold}_{\sigma_{a}}(f')$ where $f' = f - f_1$. Then, the reassignment node has input 
+$\textrm{fold}_{\sigma_{a}}(f')$ and output $\textrm{fold}_{\sigma_{b}}(f')$.
+The node that inhales access then has input $\textrm{fold}_{\sigma_{b}}(f')$. If we simply take all the permissions and put it in a filter, the inhale node would have output $\textrm{fold}_{\sigma_{c}}(f \cup f_2 ).$
+
+However, for that final assert, we need some knowledge about $\textrm{fold}_{\sigma_{c}}(f)$, but we do not with this strategy! Instead, we have $\textrm{fold}_{\sigma_{c}}(f \cup f_2 ),$ which has a bigger filter than we want.
+
+A better idea is to construct the filters that were there before the exhale. If we start with a fold on some filter $f$, lose some permissions to it, and then gain permissions back, it makes sense to construct $f$ again. Concretely, if we start from some fold before an exhale, we should aim to construct the same fold after an inhale. To decide the output fold of an inhale node, we look back at the input folds of an exhale node. In our case, the exhale node has input fold $\textrm{fold}_{\sigma_{old}}(f)$, with filter $f$. Then, at the inhale node, we can output the fold with the same filter $f$.
+
+To explain the strategy in more detail:
+\begin{enumerate}
+    \item Look at the input folds to all previous exhales. Extract the filters.
+    \item Check that the inhale has retrieved new permissions to the filter for well-definedness. 
+    \item Check that the filter is new, \ie, the method did not have full permissions to the filter before the inhale. 
+    \item For each extracted filter $f^*$, construct $\textrm{fold}_{\sigma_{new}}(f^*)$ as an output fold to the inhale node.
+\end{enumerate}
+
+Then, similar to the exhale strategy, we decompose this output fold $\textrm{fold}_{\sigma_{new}}(f^*)$ by subtracting the filter $f$, which is part of the input fold.
+
+So, the final strategies for heap-modifying nodes are
+\begin{enumerate}
+    \item Reassignment $r(i).F := ...$, mutating heap from $\sigma_i$ to $\sigma_j$: 
+    If input fold is $\textrm{fold}_{\sigma_i}(f)$, then output fold is $\textrm{fold}_{\sigma_j}(f)$. 
+    Decompose by removing $i$ from both folds.
+    \item Exhale, mutating heap from $\sigma_i$ to $\sigma_j$ via permission loss. If input fold is $\textrm{fold}_{\sigma_i}(f)$, then output fold is $\textrm{fold}_{\sigma_j}(f')$ where $f'$ is the subset of $f$ where permissions were not lost. Decompose by subtracting $f'$ from $f$ for the fold inputs. Fold outputs do not need a decomposition.
+    \item Inhale: mutating heap from $\sigma_i$ to $\sigma_j$ via permission gain. If the input fold is $\textrm{fold}_{\sigma_i}(f)$, search the input folds to previous exhales for a filter $f^* \supset f$. If new heap state has permissions to $f^*$, construct the output fold $\textrm{fold}_{\sigma_j}(f^*)$. Decompose the output fold by subtracting $f$ from $f^*$. Fold inputs do not need a decomposition.
+\end{enumerate}
+
+\subsection{Folds Flowing Backwards with Lookahead}
+There are certain limitations to this inhale strategy. If there are inhale statements without prior exhales, then our strategy does not generate any output fold. We become reliant on the user writing the fold manually. 
+
+Consider the following example, with $f$ and $f''$ as disjoint filters. 
+\begin{lstlisting}
+{
+    assume fold[sum](f) == 3
+    inhale forall i: A :: i in f'' => acc(r(i).F)
+    assume fold[sum](f') == 7
+    assert fold[sum](f union f'') == 10
+}
+\end{lstlisting}
+
+Here, the inhale node does not generate any new folds because there is no prior exhale statement. At the point of the inhale, no input fold has any information about the filter "f union f''", so the assert would not verify. 
+
+An approach we considered to solve this is to use some lookahead. Our inhale strategy looks back at input folds to previous exhales, so why not look forward at future relevant folds? Perhaps those future folds can be fed as input folds, like data flowing backwards. In the mentioned example, if the inhale node could somehow see $$\textrm{fold}_{\sigma}(f \cup f'')$$ at the end of the method, then we can perform the decomposition and generate an output fold in the previous heap state. 
+
+If this is possible, we can treat an inhale exactly like an exhale; it just needs to be read backwards. At the line before an exhale statement, the method has permissions and maybe some fold with a filter $f$. At the line after, the method has fewer permissions and a fold with a smaller filter $f'$. For inhales, it is the same read backwards. At the line after an inhale, the method has permissions and maybe some fold with a filter $f$. At the line before, the method has fewer permissions and a fold with a smaller filter $f'$. If we allow data to flow forward and backward, we can treat inhales and exhales in the same way.
+
+We are unable to do this due to practical limitations. As we will explain in the upcoming chapter, generating intermediate folds from folds in a previous heap state relies crucially on quantifier triggering. Folds in the previous heap state generate folds in the following heap state. If folds in the following heap state also generate folds in the previous heap state, we potentially end up in a matching loop. New generates old, which generates new, which generates old, \etc
+
+The other practical limitation comes from lookahead triggering. Our experiments show that including state-dependent expression in quantifier triggers has some undocumented behaviour, especially with triggers containing terms from a future state. The triggers simply do not work as you would expect, so we could not achieve this look-ahead idea.
+
+\chapter{Modelling in Viper}
+Now that we have explained the strategies for supporting folds formally, in this chapter, we will discuss encoding them into Viper.
+
+\section{Heap-dependent Fold Definition In Viper}
+Consider our fold notation as defined in the previous chapter, 
+$$\textrm{fold}_{\sigma}[o]( m(r.F) \mid f),$$
+with filter $f$, receiver $r$, and field $F$, where heap $\sigma$ is the current heap, and operator $o$ is the operator object containing a binary operation $(B, B) \rightarrow B$ and an identity element $i_0 : A$ for that operation.
+
+To translate this into Viper, there are a few challenges. Firstly, Viper does not allow first-class functions. Viper supports first-order logic, so we cannot quantify over functions, and function arguments cannot be functions. The second challenge comes from the limitations in interacting with the heap. Although the heap is part of the Viper program state, the heap is not an expression. Like functions, the heap is not a valid function argument and cannot be a quantified variable. 
+
+\subsection{Defunctionalization}
+To solve the first challenge, we first apply defunctionalization to convert each input function to a combination of domain declarations. First, we declare the domain types for each of the function arguments to a fold. We declare "Receiver[A]", "Operator[B]", "Mapping[V,B]" as domain types with type arguments "A", "V", and "B". The filters can be represented with a Viper's builtin "Set", so we do not define new types for them.
+
+For each of these domain types, we define an "apply" function that takes the newly defined types as the first argument. For example, the receiver domain has a function "recApply(r: Receiver[A], a: A) : Ref". Then, we declare axioms to describe the results of these functions. We will consider an array sum example in the next section.
+
+The "Operator[B]" domain has an "opApply" function that takes two additional arguments, each representing an input to a binary operator. In addition, each operator should have an identity value, so we define another function, "opGetIden(o: Operator[B]): B," that outputs the specified identity. Likewise, the "Mapping[V,B]" domain has a "mapApply" function for applying the mapping.
+
+This is similar to classes in object-oriented programming languages like Python. Each domain type is a class, and the "apply" functions are methods that each takes "self" as the first argument. 
+
+\subsection{Fold Object}
+Like the other types we have defined, we can also defunctionalize the fold function, representing it as a domain type or a class. From a class point of view, we define fold as a class that takes three constructor arguments: a receiver "Receiver[A]", a mapping object "Mapping[V,B]", and an operator "Operator[B]". Unfortunately, "fold" is already a keyword in Viper for folding predicates, so we use "hfold" for heap-dependent fold as the constructor instead.
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+domain Fold[A,V,B] {
+  function hfold(r: Receiver[A], m: Mapping[V,B], op: Operator[B]): Fold[A,V,B]
+}
+\end{lstlisting}
+Now, there are still some arguments missing from this encoding, namely the filter, the field, and the heap. These will appear as arguments to another function that generates the snapshot.
+
+As we explained earlier, a fold evaluation only depends on a portion of the heap defined by the filter, the receiver, and the field. We refer to this portion as a snapshot of the heap, which we have defined as $$\textrm{snap}^{r.F}_{f}(\sigma) = \{ e \rightarrow \textrm{value} \mid ([r(e), F] \rightarrow \textrm{value}) \in \sigma \land e \in f\}.$$
+
+In our Viper encoding, we modify the values in the snapshot map to include the application of the mapping function. As written earlier, an alternative representation of a fold using a snapshot is $$\textrm{fold}[o]\{m(\textrm{snap}^{r.F}_{f}(\sigma)\}.$$ Notice the $m$ applied to the snap. In our Viper encoding, we decide to distribute that $m$ application into the values of the snap map, which we can express as $$\textrm{fold}[o]\{\textrm{snap}^{m(r.F)}_{f}(\sigma)\}.$$
+
+Recall that the keys to this snapshot map should be an element of the filter, \ie, they have type "A". Applying the receiver $r$ to this "A" should give a "Ref", which would be a key to the heap map. Also, the snapshot function takes a field argument, which limits the keys of the heap map only to the tuple with the specified field.
+
+A first attempt in pseudocode at encoding this snap function might look like the following. 
+\begin{lstlisting}
+domain Fold[A,V,B] {
+  function hfold(r: Receiver[A], m: Mapping[V,B], op: Operator[B]): Fold[A,V,B]
+
+  function snap(fo: Fold[A,V,B], filter: Set[A], 
+                field: V, heap: Map[(Ref, Field V), V]): Map[A,B]
+}
+\end{lstlisting}
+Since the snapshot function depends on the receiver and mapping function, our function takes a "Fold" object that already encapsulates a "Receiver" and a "Mapping". 
+
+The snap function above is pseudocode because of a few practical limitations. For one, the field and the heap cannot be included as function arguments. More importantly, the snap function is a heap-dependent function, which cannot be declared inside a Viper domain definition. 
+
+Functions defined outside a domain declaration in Viper take the heap as an implicit argument. However, these non-domain functions cannot utilize type arguments, so the argument "fo: Fold[A,V,B]" would not be valid. So in practice, an actual snap function would look like the following.
+\begin{lstlisting}
+function snap_Int_Int_Int_val(fo: Fold[Int, Int, Int], filter: Set[Int]): Map[Int,Int]
+    requires forall i: Int :: {i in filter}  i in filter => 
+        acc(recApply(getreceiver(fo), i).val)
+\end{lstlisting}
+This snap function is intended for a "Fold[Int, Int, Int]" instance. Note also that the field, "val" in this example, is baked into the precondition, so it is not an argument. Altogether, this means that we must define a separate snap function declaration for each "Fold[A,V,B]" and each field. Because Viper does not allow type arguments for heap-dependent function, we need to perform monomorphization manually in our plugin; this amounts to declaring a new function for each instance of the type variables "A, V, B" and the relevant field. 
+
+With this snap function defined, we can declare an "apply" function for "Fold", with inputs of the fold object and the snapshot output.
+\begin{lstlisting}
+domain Fold[A,V,B] {
+  function hfold(r: Receiver[A], m: Mapping[V,B], op: Operator[B]): Fold[A,V,B]
+
+  function hfoldApply(fo: Fold[A,V,B], snap: Map[A,B]): B
+}
+\end{lstlisting}
+This mimics the earlier definition,
+$$\textrm{fold}[o]\{\textrm{snap}^{m(r.F)}_{f}(\sigma)\}.$$
+
+Notice that despite the snap function being heap-dependent, its map output is considered pure, allowing us to use it as an argument to a pure domain function "hfoldApply". Fortunately, this means we can use type arguments and declare a polymorphic "hfoldApply". In general, given the choice, we prefer to define functions as pure domain functions instead of heap-dependent functions. 
+
+\subsection{Encoding Fold Apply}
+
+
+
+\subsection{Example: Array Encoding}
+Recall that our array encoding uses a field and an "Array" domain. 
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+field val: Int
+
+domain Array {
+  function loc(a: Array, i: Int): Ref
+  function len(a: Array): Int
+
+  axiom len_nonneg {
+    forall a: Array :: { len(a) }
+      len(a) >= 0
+  }
+
+  // functions and axioms to ensure loc() injectivity
+  function first(r: Ref): Array
+  function second(r: Ref): Int  
+
+  axiom all_diff {
+    forall a: Array, i: Int :: {loc(a,i)}
+      first(loc(a,i)) == a && second(loc(a,i)) == i
+  }
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+\section{Well-definedness Checks}
+
+\section{Domain Axioms and Triggers Rationale}
+
+\section{Inlined Axioms and Triggers Rationale}
+
+\chapter{Implementation in Scala}
+
+\section{Silver Plugin Architecture}
+
+\section{...}
+
+\chapter{Evaluation}
+
+\section{Experiments with Tests}
+
+\section{Challenges in Implementation}
+
+\section{Limitations to Users}
+
+\chapter{Other Lessons}
+
+\section{Implication Support in SMT}
+
+\section{Undocumented Behavior of Heap-dependent Triggers}
+
+\section{Generated Axioms with no Triggers}
+
+\chapter{Related Works}
+
+\section{Spec\#}
+
+\section{Tierry's Thesis}
+
+\section{Arshavir's Dissertation}
+
+\chapter{Conclusion and Future Work}
+
+
+
+\chapter{LATEX STUFF}
+
+Here is a quote:
+\begin{quote}
+  % It is centered
+  \begin{center}
+    This is a small poem,\\
+    a little poem, a Haiku,\\
+    to show you how to.\\
+    ---Michael M$^{\rm c}$Neil Forbes.
+  \end{center}
+\end{quote}
+
+This small poem shows several features:
+\begin{itemize}
+\item The use of the \verb|quote| and \verb|center| environments.
+\item The \verb|\newpage| command has been used to force a page
+  break.  (Sections do not usually start on a new page.)
+\item The pagestyle has been set to suppress the headers using the
+  command \verb|\thispagestyle{plain}|.  Note that using
+  \verb|\pagestyle{plain}| would have affected all of the subsequent
+  pages.
+\end{itemize}
+\section{Programs}
+Here we give an example of a new float as defined using the
+\texttt{float} package.  In the preamble we have used the commands
+\begin{verbatim}
+\floatstyle{ruled}
+\newfloat{Program}{htbp}{lop}[chapter]
+\end{verbatim}
+This creates a ``Program'' environment that may be used for program
+fragments.  A sample \texttt{python} program is shown in
+Program~\ref{prog:fib}.  (Note that Python places a fairly restrictive
+limit on recursion so trying to call this with a large $n$ before
+building up the cache is likely to fail unless you increase the
+recursion depth.)
+\begin{Program}
+  \caption{\label{prog:fib} Python program that computes the $n^{\rm
+      th}$ Fibonacci number using memoization.}
+\begin{verbatim}
+def fib(n,_cache={}):
+    if n < 2:
+        return 1
+    if n in _cache:
+        return _cache[n]
+    else:
+        result = fib(n-1)+fib(n-2)
+        _cache[n] = result
+        return result
+\end{verbatim}
+\end{Program}
+Instead of using a \texttt{verbatim} environment for your program
+chunks, you might like to \texttt{include} them within an
+\texttt{alltt} envrironment by including the \verb|\usepackage{alltt}|
+package (see page 187 of the \LaTeX{} book).  Another useful package
+is the \verb|\usepackage{listings}| which can pretty-print many
+different types of source code.
+
+% Force a new page
+\newpage
+
+%% Here we provide a short optional argument to \chapter[]{}.  This
+%% optional argument will appear in the table of contents.  For long
+%% titles, one should use this to give a single-line entry to the
+%% table of contents.
+\chapter[Another Chapter\ldots]{Another Chapter with a Very Long
+  Chapter-name that will Probably Cause Problems}
+\label{cha:apple_ref}
+
+This chapter name is very long and does not display properly in the
+running headers or in the table of contents.  To deal with this, we
+provide a shorter version of the title as the optional argument to the
+\verb|\chapter[]{}| command.
+
+For example, this chapter's title and associated table of contents heading and
+running header was created with\\
+\verb|\chapter[Another Chapter\ldots]{Another Chapter with a Very Long|\\
+\verb|Chapter-name that will Probably Cause Problems}|.
+
+Note that, according to the thesis regulations, the heading included
+in the table of contents must be a truncation of the actual heading.
+
+This Chapter was used as a demonstration in the Preface for how to
+attribute contribution from collaborators.  If there are any such
+contributions, details must be included in the Preface.  If you wish,
+you may additionally use a footnote such as this.\footnote{This
+  chapter is based on work conducted in UBC's Maple Syrup Laboratory
+  by Dr. A. Apple, Professor B. Boat, and C. Cat.}
+
+\section{Another Section}
+Another bunch of text to demonstrate what this file does.
+You might want a list for example:\footnote{Here is a footnote in a
+  different chapter.  Footnotes should come after punctuation.}
+\begin{itemize}
+\item An item in a list.
+\item Another item in a list.
+\end{itemize}
+
+\section*{An Unnumbered Section That is Not Included in the Table of
+  Contents}
+\begin{figure}[ht]
+  \begin{center}
+%% psfrag: comment the following line if not using the psfrag package
+    \psfrag{pie makes me happy!}{$\pi$ makes me happy!}
+%% includegraphics: comment the following if not using the graphicx package
+    \includegraphics[width=0.4\textwidth]{fig}
+    \caption[Happy Face: figure example.]{\label{fig:happy} This is a figure of
+      a happy face with a \texttt{psfrag} replacement.  The original figure
+      (drawn in xfig and exported to a .eps file) has the text ``pie makes me
+      happy!''.  The \texttt{psfrag} package replaces this with ``$\pi$ makes me
+      happy!''.  Note: the Makefile compiles the sample using pdf\LaTeX\ which
+      cannot use \texttt{psfrag} directly.  For some options that work with
+      pdf\LaTeX, please see this discussion:
+      \url{http://tex.stackexchange.com/questions/11839}.  For the caption, we
+      have used the optional argument for the caption command so that only a
+      short version of this caption occurs in the list of figures.}
+  \end{center}
+\end{figure}
+\afterpage{\clearpage}
+Here is an example of a figure environment.
+Perhaps I should say that the example of a figure can be seen in
+Figure~\ref{fig: happy}.  Figure placement can be tricky with \LaTeX\
+because figures and tables are treated as ``floats'': text can flow
+around them, but if there is not enough space, they will appear later.
+To prevent figures from going too far, the
+\verb|\afterpage{\clearpage}| command can be used.  This makes sure
+that the figures are typesetted at the end of the page (possibly appearing on
+their own on the following pages) and before any subsequent text.
+
+The \verb|\clearpage| forces a page break so that the figure can be
+placed, but without the the \verb|\afterpage{}| command, the page
+would be broken too early (at the \verb|\clearpage| statement).  The
+\verb|\afterpage{}| command tells \LaTeX{} to issue the command after
+the present page has been rendered.
+
+\section{Tables}
+We have already included one table:~\ref {tab: Table1}.  Another table
+is plopped right here.
+\begin{table}[ht]
+  \begin{center}
+    \begin{tabular}{|l||l|l||l|l|}
+      \hline
+      &\multicolumn{2}{l|}{Singular}&\multicolumn{2}{l|}{Plural}\\
+      \cline{2-5}
+       &English&\textbf{Gaeilge}&English&\textbf{Gaeilge}\\
+      \hline\hline
+      1st Person&at me&\textbf{agam}&at us&\textbf{againn}\\
+      2nd Person&at you&\textbf{agat}&at you&\textbf{agaibh}\\
+      3rd Person&at him&\textbf{aige}&at them&\textbf{acu}\\
+       &at her&\textbf{aici}& & \\
+      \hline
+    \end{tabular}
+    \caption{
+      \label{tab:Table2}
+      Another table.}
+  \end{center}
+\end{table}
+Well, actually, as with Figures, tables do not
+necessarily appear right ``here'' because tables are also ``floats''.
+\LaTeX{} puts them where it can.  Because of this, one should refer to
+floats by their labels rather than by their location.  This example is
+demonstrated by Table~\ref{tab:Table2}.  This one is pretty close,
+however.  (Note: you should generally not put tables or figures in the
+middle of a paragraph.  This example is for demonstration purposes
+only.)
+
+Another useful package is \verb|\usepackage{longtable}| which provides
+the \texttt{longtable} environment.  This is nice because it allows
+tables to span multiple pages.  Table~\ref{tab:longtable} has been
+formatted this way.
+\begin{center}
+  \begin{longtable}{|l|l|l|}
+    \caption{\label{tab:longtable}Feasible triples for
+      highly variable Grid}\\
+
+    \hline \multicolumn{1}{|c|}{\textbf{Time (s)}} &
+    \multicolumn{1}{c|}{\textbf{Triple chosen}} &
+    \multicolumn{1}{c|}{\textbf{Other feasible triples}} \\ \hline
+    \endfirsthead
+
+    \multicolumn{3}{c}%
+    {{\bfseries \tablename\ \thetable{} -- continued from previous page}} \\
+    \hline \multicolumn{1}{|c|}{\textbf{Time (s)}} &
+    \multicolumn{1}{c|}{\textbf{Triple chosen}} &
+    \multicolumn{1}{c|}{\textbf{Other feasible triples}} \\ \hline
+    \endhead
+
+    \hline \multicolumn{3}{|r|}{{Continued on next page}} \\ \hline
+    \endfoot
+
+    \hline \hline
+    \endlastfoot
+
+    0 & (1, 11, 13725) & (1, 12, 10980), (1, 13, 8235), (2, 2, 0), (3, 1, 0) \\
+    274 & (1, 12, 10980) & (1, 13, 8235), (2, 2, 0), (2, 3, 0), (3, 1, 0) \\
+    5490 & (1, 12, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    8235 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    10980 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    13725 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    16470 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    19215 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    21960 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    24705 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    27450 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    30195 & (2, 2, 2745) & (2, 3, 0), (3, 1, 0) \\
+    32940 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    35685 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    38430 & (1, 13, 10980) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    41175 & (1, 12, 13725) & (1, 13, 10980), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    43920 & (1, 13, 10980) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    46665 & (2, 2, 2745) & (2, 3, 0), (3, 1, 0) \\
+    49410 & (2, 2, 2745) & (2, 3, 0), (3, 1, 0) \\
+    52155 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    54900 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    57645 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    60390 & (1, 12, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    63135 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    65880 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    68625 & (2, 2, 2745) & (2, 3, 0), (3, 1, 0) \\
+    71370 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    74115 & (1, 12, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    76860 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    79605 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    82350 & (1, 12, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    85095 & (1, 12, 13725) & (1, 13, 10980), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    87840 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    90585 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    93330 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    96075 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    98820 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    101565 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    104310 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    107055 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    109800 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    112545 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    115290 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    118035 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    120780 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    123525 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    126270 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    129015 & (2, 2, 2745) & (2, 3, 0), (3, 1, 0) \\
+    131760 & (2, 2, 2745) & (2, 3, 0), (3, 1, 0) \\
+    134505 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    137250 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    139995 & (2, 2, 2745) & (2, 3, 0), (3, 1, 0) \\
+    142740 & (2, 2, 2745) & (2, 3, 0), (3, 1, 0) \\
+    145485 & (1, 12, 16470) & (1, 13, 13725), (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    148230 & (2, 2, 2745) & (2, 3, 0), (3, 1, 0) \\
+    150975 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    153720 & (1, 12, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    156465 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    159210 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    161955 & (1, 13, 16470) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+    164700 & (1, 13, 13725) & (2, 2, 2745), (2, 3, 0), (3, 1, 0) \\
+\end{longtable}
+\end{center}
+
+\subsection*{An Unnumbered Subsection}
+Note that if you use subsections or further divisions under an
+unnumbered section, then you should make them unnumbered as well
+otherwise, you will end up with zeros in the section numbering.
+
+\chapter{Landscape Mode}
+The landscape mode allows you to rotate a page through 90 degrees.  It
+is generally not a good idea to make the chapter heading landscape,
+but it can be useful for long tables, etc.
+
+\begin{landscape}
+  This text should appear rotated, allowing for formatting of very
+  wide tables, etc.  Note that this might only work after you convert
+  the \texttt{dvi} file to a postscript (\texttt{ps}) or \texttt{pdf}
+  file using \texttt{dvips} or \texttt{dvipdf} etc.  This feature is
+  provided by the \verb|lscape| and the \verb|pdflscape| packages.
+  The latter is preferred if it works, as it also rotates the pages in
+  the PDF file for easier viewing.
+\end{landscape}
+
+%% This file is set to use a BibTeX file sample.bib and uses the
+%% plain style.  Other styles may be used depending on the conventions
+%% of your field of study.
+%%
+%%% Note: the bibliography must come before the appendices.
+\bibliographystyle{plain}
+\bibliography{sample}
+
+%% Use this to reset the appendix counter.  Note that the FoGS
+%% requires that the word ``Appendices'' appear in the table of
+%% contents either before each appendix label or as a division
+%% denoting the start of the appendices.  We take the latter option
+%% here.  This is ensured by making the \texttt{appendicestoc} option
+%% a default option to the UBC thesis class.
+
+%%% If you only have one appendix, please uncomment the following line.
+% \renewcommand{\appendicesname}{Appendix}
+\appendix
+\chapter{First Appendix}
+Here you can have your appendices.  Note that if you only have a
+single appendix, you should issue
+\verb|\renewcommand{\appendicesname}{Appendix}| before calling
+\verb|\appendix| to display the singular ``Appendix'' rather than the
+default plural ``Appendices''.
+
+\chapter{Second Appendix}
+Here is the second appendix.
+
+%% This changes the headings and chapter titles (no numbers for
+%% example).
+\backmatter
+
+%% Indices come here if you have them.
+
+\chapter*{Additional Information}
+This chapter shows you how to include additional information in your
+thesis, the removal of which will not affect the submission.  Such
+material should be removed before the thesis is actually submitted.
+
+First, the chapter is unnumbered and not included in the Table of
+Contents.  Second, it is the last section of the thesis, so its
+removal will not alter any of the page numbering etc. for the previous
+sections.  Do not include any floats, however, as these will appear in
+the initial lists.
+
+The \texttt{ubcthesis} \LaTeX{} class has been designed to aid you in
+producing a thesis that conforms to the requirements of The
+University of British Columbia Faculty of Graduate Studies (FoGS).
+
+Proper use of this class and sample is highly recommended---and should
+produce a well formatted document that meets the FoGS requirement.
+Notwithstanding, complex theses may require additional formatting that
+may conflict with some of the requirements.  We therefore \emph{highly
+  recommend} that you consult one of the FoGS staff for assistance and
+an assessment of potential problems \emph{before} starting final
+draft.
+
+While we have attemped to address most of the thesis formatting
+requirements in these files, they do not constitute an official set of
+thesis requirements.  The official requirements are available at the
+following section of the FoGS web site:
+\begin{center}
+  \begin{tabular}{|l|}
+    \hline
+    \url{http://www.grad.ubc.ca/current-students/dissertation-thesis-preparation}\\
+    \hline
+  \end{tabular}
+\end{center}
+We recommend that you review these instructions carefully.
+
+\end{document}
+\endinput
+%%
+%% End of file `ubcsample.tex'.

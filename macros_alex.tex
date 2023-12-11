@@ -1,0 +1,83 @@
+% references with “namespaces”
+
+\newcommand*{\tableref}[1]{Table~\ref{table:#1}}
+\newcommand*{\figref}[1]{Fig.~\ref{fig:#1}}
+\newcommand*{\secref}[1]{Sec.~\ref{sec:#1}}
+\newcommand*{\defref}[1]{Def.~\ref{defn:#1}}
+\newcommand*{\appref}[1]{App.~\ref{sec:#1}}%\suppref{}}
+
+% useful abbreviations – currently written UK English style
+
+\newcommand{\wrt}{{{w.r.t.\@}}}
+\newcommand{\etc}{{{etc.\@}}}
+\newcommand{\eg}{{{e.g.\@}}}
+\newcommand{\resp}{{{resp.\@}}}
+\newcommand{\ie}{{{i.e.\@}}}
+\newcommand{\cf}{{{cf.\@}}}
+\newcommand{\etal}{{{et~al.\@}}}
+
+
+%% comments/todos/etc. with colour
+\usepackage[normalem]{ulem}
+\usepackage{color}
+
+% uncomment \def\nocolour{ } to eliminate all text colour
+% \def\nocolour{ }
+% \def\sout#1{} % comment this to get the default strikethrough - this overrides the existing macro
+
+
+\newcommand{\soutifcolour}[1]{\ifdefined\nocolour{}\else{\protect\sout{#1}}\fi}
+
+\newcommand\todo[1]{\ifdefined\nocolour{}\else{\textcolor{red}{TODO: #1}}\fi}
+
+\newcommand{\peter}[1]{\ifdefined\nocolour{#1}\else{\color{blue}{#1}}\fi}
+\newcommand{\pfootnote}[1]{\ifdefined\nocolour{}\else\peter{\footnote{\peter{PETER: #1}}}\fi}
+\newcommand{\pout}[1]{\peter{{\soutifcolour{#1}}}}
+
+\newcommand{\as}[1]{\ifdefined\nocolour{{#1}}\else{\color{orange}{#1}}\fi}
+\newcommand{\asfootnote}[1]{\ifdefined\nocolour{}\else\as{\footnote{\as{ALEX: #1}}}\fi}
+\newcommand{\asout}[1]{\as{\soutifcolour{#1}}}
+
+
+% OPERATORS: try e.g. \def\FV{\operator{\textit{FV}}}
+
+\makeatletter
+% Optional arguments - if followed by a { then generates ( ) around argument
+\def\operator#1{\@ifnextchar\bgroup {\operatorarg{\ensuremath{#1}}}{\ensuremath{#1}}}
+\def\operatorarg#1#2{{#1}{\ensuremath{(#2)}}}
+% Optional arguments - if followed by a { then generates operator which takes #3 and produces #1#2#3
+\def\spoperator#1#2{\@ifnextchar\bgroup{\spoperatorarg{\ensuremath{#1}}{\ensuremath{#2}}}{\ensuremath{#1}}}
+\def\spoperatorarg#1#2#3{\ensuremath{#1#2#3}}
+
+% Optional arguments - as above, but parses argument {A,B} and produces A.op(B)
+% WARNING: ~ character should not occur in the arguments of this macro..
+\def\fixedoperator#1{\@ifnextchar\bgroup {\fixedoperatorarg{#1}}{\ensuremath{#1}}}
+\def\fixedoperatorarg#1#2{\fixedoperatorparse{#1}#2~}
+\def\fixedoperatorparse#1#2,#3~{\ensuremath{{#2}{.}{#1}{(#3)}}}
+\makeatother
+
+
+% Inference rules - try \Inf{blah}{blah2}.{bleh}{bleeh} – requires the “prooftree” package (prooftree.sty)
+\makeatletter
+
+\newskip \point
+
+\point =1pt
+
+\def \premisespacing{\quad}
+
+\def \RulePremisesNewlineMore[#1]#2.#3#4{\@ifnextchar\bgroup{\RulePremisesNewlineMore[#1]{#2}.{#3\premisespacing#4}}{\@ifnextchar.{\RulePremisesNewline[#1]{{\begin{array}{c}#2\\#3\premisespacing#4\end{array}}}}{\RuleMultiPremise[#1]{{\begin{array}{c}#2\\#3\end{array}}}{#4}}}}
+
+\def \RulePremisesNewline[#1]#2.#3{\@ifnextchar\bgroup{\RulePremisesNewlineMore[#1]{#2}.{#3}}{\@ifnextchar.{\RulePremisesNewline[#1]{{\begin{array}{c}#2\\#3\end{array}}}}{\RuleMultiPremise[#1]{#2}{#3}}}}
+
+\def \RuleMultiPremise[#1]#2#3{\@ifnextchar\bgroup{\RuleMultiPremise[#1]{#2\premisespacing#3}}{\@ifnextchar.{\RulePremisesNewline[#1]{#2\premisespacing#3}}{\prooftree #2\justifies#3 \using{#1}\endprooftree}}}
+
+\def \RuleWithName[#1]#2{\@ifnextchar\bgroup {\RuleMultiPremise[#1]{#2}}{\@ifnextchar.{\RulePremisesNewline[#1]{#2}}{\prooftree \justifies #2 \using{#1} \endprooftree}}}
+
+\def \RuleWithInfo[#1]{\@ifnextchar[{\RuleWithNameAndCondition[#1]}{\RuleWithName[(#1)]}}
+
+\def \RuleWithNameAndCondition[#1][#2]{\RuleWithName[(#1)^{#2}]}
+
+\def \Inf{\proofrulebaseline=2ex \abovedisplayskip12\point\belowdisplayskip12\point \abovedisplayshortskip8\point\belowdisplayshortskip8\point \@ifnextchar[{\RuleWithInfo}{\RuleWithName[ ]}}
+
+\makeatother
