@@ -80,8 +80,14 @@
 
 \input{macros_alex}
 \lstset{language=silver,numbers=left, firstnumber=1, stepnumber=1}
-\lstMakeShortInline{"}
+\lstMakeShortInline[language=silver,
+               basicstyle=\normalsize\silverbasicstyle,
+               keywordstyle=\normalsize\silverkeywordstyle,
+               columns=fixed]{"}
+\usepackage{amsthm}
 
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
 
 
 %******** afterpage ***************************
@@ -219,6 +225,8 @@
   linkbordercolor={0.5 0.5 1},
   citebordercolor={0.5 1 0.5},
   linkcolor=blue]{hyperref}
+
+\usepackage{cleveref}
 
 % If you would like to compile this sample thesis without the
 % hyperref package, then you will need to comment out the previous
@@ -662,6 +670,8 @@ len(a_1) >= 0 && len(a_2) >= 0 && len(a_3) >= 0 && ...
 \end{lstlisting}
 including all possible arrays "a_i : Array". The SMT solver cannot instantiate every possible "a_i" from the quantifier, so it instead relies on the trigger, which is enclosed inside the curly braces "{...}". The term "len(a_i) >= 0" will only instantiate as an assumption if elsewhere "len(a_i)" is mentioned. The triggering term could be written in a statement by the user, or could be instantiated by a different axiom. 
 
+The SMT solver will also match the trigger using know equivalence. For example, suppose an axiom uses "{g(f(x))}" as a trigger. Then somewhere else, suppose there is an assumption that "f(x) = 5". Then,  the term "g(5)" will still match the trigger, because the SMT solver can replace "5" with "f(x)" knowing they are equal. This is called \emph{e-matching}, where equivalence is also used for trigger matching. Moreover, in the SMT solver's backend, there is a data structure call an \emph{e-graph} that helps track equivalence between terms. Terms that exist as an assumption during are considered added to the e-graph. 
+
 \subsection{Choosing Triggers}
 Triggers must be chosen carefully to ensure that the axioms are instantiated when necessary. For example, 
 \begin{lstlisting}
@@ -1072,9 +1082,16 @@ To answer the first question, we need to define a new $f'$ such that $\textrm{fo
 Let $\sigma_0.\textrm{keys}(F)$ represent the set of "Ref" keys in heap $\sigma_0$ with some field $F$. Recall that we represent the heap as a partial map typed \lstinline{(Ref, Field A) $\rightarrow$ A}, which has tuple keys of the form "(Ref, Field A)". So, think of this $\textrm{keys}(F)$ function as extracting the tuple keys from the heap, filtering the tuple such that the second element is equal to $F$, and outputting the first element typed "Ref" of the remaining tuples. Recall that each key on $\sigma_0$ exists if and only if the method has permissions to that heap location at the program point.
 
 Then, we define 
+\begin{definition}[Lost References]\label{def:Lost}
 $$L := \sigma_0.\textrm{keys}(F) - \sigma_1.\textrm{keys}(F),$$
-\ie, let $L$ be the set of references that the exhale gave away permissions to, with respect to field $F$. Then, we define the filter of remaining elements $f'$ as
-$$f' := \{e \in f | r(e) \not\in L \},$$ where $r$ is the receiver function. By definition, $f'$ guarantees that $\textrm{fold}_{\sigma_1}(f')$ is well-defined with regards to permissions. 
+\ie, let $L$ be the set of references that the exhale gave away permissions to, with respect to field $F$.
+\end{definition}
+
+Then, we define the filter of remaining elements $f'$ as
+\begin{definition}[Remaining References]\label{def:notLost}
+$$f' := \{e \in f | r(e) \not\in L \},$$ where $r$ is the receiver function. 
+\end{definition}
+By definition, $f'$ guarantees that $\textrm{fold}_{\sigma_1}(f')$ is well-defined with regards to permissions. 
 
 \subsubsection{Decomposition of In and Out Folds}
 Next, we decide the decomposition of the folds in and out of the exhale node. For the fold input, \ie, $\textrm{fold}_{\sigma_0}(f)$,  there is one obvious contender. We can decompose $f$ using $f'$! By definition,  $f'$ is a subset of $f$, which gives us the decomposition $f = f' \uplus (f-f')$. Applying this to the fold evaluation, we get the fold decomposition
@@ -1127,7 +1144,7 @@ There are two main questions regarding this.
     \item Is this enough?
 \end{enumerate}
 
-\subsection{Finding the Output Fold Filter $f^*$}
+\subsection{Finding the Output Fold Filter}
 Picking which $f^*$ to construct from a smaller filter $f$ is not so obvious. One viable idea is to construct the set of all heap locations gained from the inhale, extract a filter set out of that, and union it to $f$. 
 
 However, this idea is problematic when the amount of permissions gained exceeds the filter of interest. For example, consider the following snippet.
@@ -1172,7 +1189,7 @@ To explain the strategy in more detail:
 Then, similar to the exhale strategy, we decompose this output fold $\textrm{fold}_{\sigma_{new}}(f^*)$ by subtracting the filter $f$, which is part of the input fold. At the exhale node, the input fold $\textrm{fold}_{\sigma_{old}}(f^*)$ should also be decomposed by subtracting the filter $f$ for symmetry. 
 
 So, the final strategies for heap-modifying nodes are
-\begin{enumerate}
+\begin{enumerate} \label{strat:final}
     \item Reassignment $r(i).F := ...$, mutating heap from $\sigma_i$ to $\sigma_j$: 
     If input fold is $\textrm{fold}_{\sigma_i}(f)$, then output fold is $\textrm{fold}_{\sigma_j}(f)$. 
     Decompose by removing $i$ from both folds.
@@ -1216,9 +1233,29 @@ To translate this into Viper, there are a few challenges. Firstly, Viper does no
 \subsection{Defunctionalization}
 To solve the first challenge, we first apply defunctionalization to convert each input function to a combination of domain declarations. First, we declare the domain types for each of the function arguments to a fold. We declare "Receiver[A]", "Operator[B]", "Mapping[V,B]" as domain types with type arguments "A", "V", and "B". The filters can be represented with a Viper's builtin "Set", so we do not define new types for them.
 
-For each of these domain types, we define an "apply" function that takes the newly defined types as the first argument. For example, the receiver domain has a function "recApply(r: Receiver[A], a: A) : Ref". Then, we declare axioms to describe the results of these functions. We will consider an array sum example in the next section.
+For each of these domain types, we define an "apply" function that takes the newly defined types as the first argument. For example, the receiver domain has a function "recApply(r: Receiver[A], a: A) : Ref". Then, we declare axioms to describe the results of these functions. These axioms depend on the function definitions written by the user. If the axioms refer to a specific instance, like "Receiver[Int]" with type variable "A" replaced by "Int", it can even be written in a different domain. For now, here is the "Receiver" domain declaration with the axiom
+\begin{lstlisting}
+domain Receiver[A]  {
+  function recApply(r: Receiver[A], a: A): Ref 
+  function recInv(rec: Receiver[A], ref: Ref): A 
+}
+\end{lstlisting}
+The receiver inverse "recInv" is something we get from injectivity (discussed later in the well-definedness checks section). A receiver maps an element of a filter to a reference. Sometimes, given an arbitrary reference, we want to extract the original element from the filter.  We do so using the "recInv". For example, if there is a reassignment "r(i).val := ...", we need to be able to extract "i" with "recInv(r(i))" to perform the appropriate fold decomposition.
 
-The "Operator[B]" domain has an "opApply" function that takes two additional arguments, each representing an input to a binary operator. In addition, each operator should have an identity value, so we define another function, "opGetIden(o: Operator[B]): B," that outputs the specified identity. Likewise, the "Mapping[V,B]" domain has a "mapApply" function for applying the mapping.
+The "Operator[B]" domain has an "opApply" function that takes two additional arguments, each representing an input to a binary operator. In addition, each operator should have an identity value, so we define another function, "opGetIden(o: Operator[B]): B," that outputs the specified identity.
+\begin{lstlisting}
+domain Operator[B]  {
+  function opApply(op: Operator[B], val1: B, val2: B): B 
+  function opGetIden(op: Operator[B]): B 
+}
+\end{lstlisting}
+
+Likewise, the "Mapping[V,B]" domain has a "mapApply" function for applying the mapping.
+\begin{lstlisting}
+domain Mapping[V, B]  {
+  function mapApply(m: Mapping[V, B], _mInput: V): B 
+}
+\end{lstlisting}
 
 This is similar to classes in object-oriented programming languages like Python. Each domain type is a class, and the "apply" functions are methods that each takes "self" as the first argument. 
 
@@ -1229,8 +1266,20 @@ domain Fold[A,V,B] {
   function hfold(r: Receiver[A], m: Mapping[V,B], op: Operator[B]): Fold[A,V,B]
 }
 \end{lstlisting}
+
+Given a "hfold" object, we should be able to extract the components from it, namely the receiver, operator, and mapping. We declare getter functions for them.
+\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
+domain Fold[A,V,B] {
+  function hfold(r: Receiver[A], m: Mapping[V,B], op: Operator[B]): Fold[A,V,B]
+  
+  function getreceiver(c: Fold[A, V, B]): Receiver[A] 
+  function getoperator(c: Fold[A, V, B]): Operator[B] 
+  function getmapping(c: Fold[A, V, B]): Mapping[V, B] 
+}
+\end{lstlisting}
 Now, there are still some arguments missing from this encoding, namely the filter, the field, and the heap. These will appear as arguments to another function that generates the snapshot.
 
+\subsection{Snapshot Introduction}
 As we explained earlier, a fold evaluation only depends on a portion of the heap defined by the filter, the receiver, and the field. We refer to this portion as a snapshot of the heap, which we have defined as $$\textrm{snap}^{r.F}_{f}(\sigma) = \{ e \rightarrow \textrm{value} \mid ([r(e), F] \rightarrow \textrm{value}) \in \sigma \land e \in f\}.$$
 
 In our Viper encoding, we modify the values in the snapshot map to include the application of the mapping function. As written earlier, an alternative representation of a fold using a snapshot is $$\textrm{fold}[o]\{m(\textrm{snap}^{r.F}_{f}(\sigma)\}.$$ Notice the $m$ applied to the snap. In our Viper encoding, we decide to distribute that $m$ application into the values of the snap map, which we can express as $$\textrm{fold}[o]\{\textrm{snap}^{m(r.F)}_{f}(\sigma)\}.$$
@@ -1252,8 +1301,9 @@ The snap function above is pseudocode because of a few practical limitations. Fo
 
 Functions defined outside a domain declaration in Viper take the heap as an implicit argument. However, these non-domain functions cannot utilize type arguments, so the argument "fo: Fold[A,V,B]" would not be valid. So in practice, an actual snap function would look like the following.
 \begin{lstlisting}
-function snap_Int_Int_Int_val(fo: Fold[Int, Int, Int], filter: Set[Int]): Map[Int,Int]
-    requires forall i: Int :: {i in filter}  i in filter => 
+function snap_Int_Int_Int_val(fo: Fold[Int, Int, Int], filter: Set[Int]): 
+    Map[Int,Int]
+    requires forall i: Int :: {i in filter}  i in filter ==> 
         acc(recApply(getreceiver(fo), i).val)
 
     ensures domain(result) == filter
@@ -1261,8 +1311,13 @@ function snap_Int_Int_Int_val(fo: Fold[Int, Int, Int], filter: Set[Int]): Map[In
       (i in filter) ==> result[i] ==
        (mapApply((getmapping(fo)), 
                  (recApply((getreceiver(fo)), i)).val)))
+    ensures getSnapFieldID(result) == 1
 \end{lstlisting}
-This snap function is intended for a "Fold[Int, Int, Int]" instance. Note also that the field "val" in this example is inlined into the precondition, so it is not an argument. Altogether, this means that we must define a separate snap function declaration for each "Fold[A,V,B]" and each field. Because Viper does not allow type arguments for heap-dependent functions, we need to perform monomorphization manually in our plugin; this amounts to declaring a new function for each instance of the type variables "A, V, B" and the relevant field. 
+This snap function is intended for a "Fold[Int, Int, Int]" instance and the "val" field. The field "val" in this example is inlined into the precondition, so it is not an argument. Altogether, this means that we must define a separate snap function declaration for each "Fold[A,V,B]" and each field. Because Viper does not allow type arguments for heap-dependent functions, we need to perform monomorphization manually in our plugin; this amounts to declaring a new function for each instance of the type variables "A, V, B" and the relevant field. 
+
+Note that the preconditions contain quantified permissions, denoting access to all indices defined by "receiver(i).val," where "i" is an element of the filter. To create a snapshot of the heap elements, we need permission to read the heap elements. Technically, this can be fractional permissions since we only need read access. Also, using quantified permissions requires injectivity of the receiver expression with respect to the filter. This is a well-definedness check that we will include as another function precondition. We discuss this in the upcoming Well-definedness Checks section. 
+
+For now, we omitted some other specifications of the snap functions; there is an injectivity check of the receiver and post-conditions to aid with fold decomposition, filter equality checks, and connection to a secondary snap function, "snap_prime." We will explain these things gradually.
 
 The ensures clause of the snap function defines the output map. The keyword "result" in Viper denotes the output of a function, and function postconditions typically refer to the "result" extensively. The first post-condition above ensures that the output's keys, also called domain, are equal to the filter set. The second post-condition ensures that the output map's value for key "i" is equal to "mapping(receiver(i).val)" with the appropriate defunctionalized apply functions.
 
@@ -1311,14 +1366,14 @@ The third case is the decomposition case. Recall that we perform two kinds of de
 
 \subsubsection{Singleton Decomposition Axiom}
 The case for singleton decomposition can be axiomatized by the following domain axiom:
-\begin{lstlisting}
+\begin{lstlisting}[label=axm:drpone,caption=Decomposition By Removing 1 Element]
 axiom _dropOne {
-forall c: Fold[A, V, B], snap: Map[A,B], key: A ::
-{ triggerDeleteKey((hfoldApply(c, snap)), key) }
+forall fo: Fold[A, V, B], snap: Map[A,B], key: A ::
+{ triggerDeleteKey((hfoldApply(fo, snap)), key) }
 (key in domain(snap)) ==>
-hfoldApply(c, snap) == 
-  opApply(getoperator(c), 
-    hfoldApply1(c, mapDelete(snap, Set(key))), 
+hfoldApply(fo, snap) == 
+  opApply(getoperator(fo), 
+    hfoldApply1(fo, mapDelete(snap, Set(key))), 
     snap[key])
 }
 \end{lstlisting}
@@ -1445,7 +1500,7 @@ There are four main well-definedness requirements that need to be checked for so
     \item Current state must have enough permissions to all heap locations defined by the filter and receiver
 \end{enumerate}
 
-Correct typing is ensured by Viper's backend typechecker. The next chapter will discuss how we used that in our plugin. 
+Correct typing is ensured by Viper's backend typechecker. The next chapter will discuss how we use the typechecker in our plugin. 
 
 \subsection{Operator associativity, commutativity, and identity}
 The operator's well-definedness checks can be done in a 
@@ -1471,23 +1526,266 @@ assert (forall  _i1: Int ::
 Although these properties are important for soundness, we do not need them in any of the proofs. They do not need to appear as axioms, so the separate method checks are sufficient. Also, the triggers in the assertions are essentially mute because we do not intend the quantifiers to instantiate anywhere else. 
 
 \subsection{Injectivity Of Receiver on the Filter}
-Injectivity of the receiver with respect to the filter is required by quantified permissions. Since we use quantified permissions extensively in the snapshot function specifications, Viper must be able to prove injectivity to avoid well-definedness errors in using the snapshots. 
+Injectivity of the receiver with respect to the filter is required by quantified permissions. Since we use quantified permissions in the snapshot function specifications, Viper must be able to prove injectivity to avoid well-definedness errors in using the snapshots. 
 
 In addition, we also rely on having an inverse in some of our strategies. For example, in the inlined axiom for singleton decomposition (explained in the upcoming sections), we use "recInv(loc(a,i))" to extract the index "i". This inverse would not exist without the injectivity of the receiver.
 
-We want to avoid repeated checks of injectivity, 
+There are a few challenges and requirements for implementing the injectivity well-definedness checks.
+\begin{itemize}
+    \item Injectivity check should throw an error if it fails.
+    \item Injectivity is required for quantified permissions, so an injectivity axiom must exist after the check. We cannot have an assertion in a separate method that we discard, unlike the techniques for checking operator well-definedness.
+    \item We should avoid repeated injectivity checks. A receiver and filter pair should only be checked once.
+\end{itemize}
+
+By the first requirement, the injectivity check cannot be done in a domain axiom. There should be an assertion error if the checks fail, and domain axioms do not generate those errors. So, it must be some kind of assertion or precondition check. 
+
+An alternative we previously considered to check injectivity is simply adding "assert" statements prior to user mentioned "fold" expressions. However, this technique would limit the usage of fold expressions outside a method body, where assert statements cannot be added in. For example, if a fold expression appears inside a heap-dependent function body, there is nowhere to add an assert statement because a function body can only have an expression! 
+
+\subsubsection{Injectivity Check in Snapshot Precondition}
+We chose to encode an injectivity check as a precondition to the snapshot function, as shown in the following code snippet.
+\begin{lstlisting}
+function snap_Int_Int_Int_val(fo: Fold[Int, Int, Int], 
+        filter: Set[Int]): Map[Int,Int]
+    requires forall ind1: Int, ind2: Int ::
+      { ind1 in filter, ind2 in filter }
+      ind1 in filter && ind2 in filter 
+        && ind1 != ind2 ==>
+      recApply((getreceiver(fo)),ind1) !=
+        recApply((getreceiver(fo)),ind2)
+        
+    // the next precondition has quantified permissions
+    requires forall i: Int :: {i in filter}  i in filter ==> 
+        acc(recApply(getreceiver(fo), i).val)
+\end{lstlisting}
+The check is done according to the standard definition of injectivity. The receiver "r" is injective with respect to "filter" if 
+$$\forall i, j \in "filter" \ldotp i \neq j \implies "r(i)" \neq  "r(j)". $$
+Given two distinct indices in the filter, the receiver applied to each index should point to different references. 
+
+Having this as a precondition ensures that before a snapshot is taken, we check for injectivity. Should the check fail, there will be a precondition check failure error. Notice that we place this precondition above the quantified permissions precondition; Quantified permissions in Viper require injectivity of the receiver, so having the precondition earlier means we prove it first.
+
+\subsubsection{filterReceiverGood Flag}
+We may also want to save this knowledge of injectivity for later, so we do not need to prove it again. We declare an additional domain function 
+\begin{lstlisting}
+    function filterReceiverGood(f: Set[A],r: Receiver[A])
+\end{lstlisting}
+to achieve this. If an instance of "filterReceiverGood(f,r)" is true then receiver "r" is injective over some filter "f". Once we prove injectivity fully with the precondition, the snap function can have a postcondition ensuring "filterReceiverGood(fo,r)."
+\begin{lstlisting}
+function snap_Int_Int_Int_val(fo: Fold[Int, Int, Int], 
+        filter: Set[Int]): Map[Int,Int]
+    ....
+    ensures filterReceiverGood(filter, getreceiver(fo))
+\end{lstlisting}
+
+If we know "filterReceiverGood(f,r)", we should be able to skip the snapshot precondition check. To encode this skipping, we use a short-circuiting disjunction in the precondition with "filterReceiverGood(f,r)" as the first term:
+\begin{lstlisting}
+function snap_Int_Int_Int_val(fo: Fold[Int, Int, Int], 
+        filter: Set[Int]): Map[Int,Int]
+    requires filterReceiverGood(f, getreceiver(fo))  ||     
+        forall ind1: Int, ind2: Int ::
+      { ind1 in filter, ind2 in filter }
+      ind1 in filter && ind2 in filter 
+        && ind1 != ind2 ==>
+      recApply((getreceiver(fo)),ind1) !=
+        recApply((getreceiver(fo)),ind2).
+\end{lstlisting}
+This way, if a filter and receiver pair is already known to be injective through "filterReceiverGood(f, getreceiver(fo))", the disjunction evaluates to true without needing to verify the second term.
+
+We can define additional axioms for "filterReceiverGood" in a domain declaration. Specifically, we add to the "Receiver" domain the axioms stating that injective receiver and filter pairing have an inverse. 
+\begin{lstlisting}
+axiom _inverse_receiver {
+    (forall a: A, f: Set[A], r: Receiver[A] ::
+      { (recApply(r, a)), (filterReceiverGood(f, r)) } { a in f, (filterReceiverGood(f, r)) }
+      (filterReceiverGood(f, r)) && (a in f) ==>
+        (recInv(r, (recApply(r, a)))) == a)
+  }
+  
+axiom _inverse_receiver1 {
+    (forall ref: Ref, f: Set[A], r: Receiver[A] ::
+      { (filterReceiverGood(f, r)), (recInv(r, ref)) }
+      (filterReceiverGood(f, r)) && ((recInv(r, ref)) in f) ==>
+      (recApply(r, (recInv(r, ref)))) == ref)
+  }
+\end{lstlisting}
+There are two inverse axioms. One states that given an element "a" in the filter, "recInv(r(a)) = a". The second axiom goes the other way; for some arbitrary reference, "ref," given that "recInv(ref)" is in the filter, then "r(recInv(ref)) = ref." The two distinct axioms are chosen for triggering completeness. Applying a "recApply" function explicitly would instantiate the first inverse axiom. Typically, in our receiver definitions, a receiver expression like "loc(a,i)" can be used as a trigger to instantiate the corresponding "recApply(r,i)",   (see our receiver definition for array sum before). However, there are some receiver expressions that are not valid triggers, such as the identity receiver from "Ref" to "Ref", so an explicit "recApply" may not be instantiated as a term. The second axiom ensures that if we apply a "recInv" function to that "Ref", such as in our inlining strategy, we still instantiate a "recApply" term and gain some knowledge about the inverse. More on triggers in the upcoming section.
+
+We also generate other useful axioms that can infer further injectivity properties. For example, if a receiver "r" is injective over a filter "f", then it still is injective over a subset of "f". This is particularly useful when we decompose folds by taking subsets of the filter. Some other properties are
+\begin{itemize}
+    \item If receiver "r" is injective over a filter "f", then it is still injective over filter "f setminus f_1" for any filter "f_1"
+    \item If receiver "r" is injective over a filter "f_1 union f_2", then it is still injective over filter "f_1" and over filter "f_2" separately. 
+\end{itemize}
+
+\subsubsection{Current state must have enough permissions to all heap locations defined by the filter and receiver}
+The well-definedness condition of having permissions to all heap locations is checked automatically in the snapshot precondition. Recall that the snapshot precondition uses quantified permissions to check access to all heap locations defined by the receiver, filter, and field. This check will be done at the " fold " call site.
+
+\section{Encoding the Modular Strategies}
+Suppose the user writes an expression with a fold application denoting an array sum over all elements: 
+\begin{lstlisting}
+hfoldApply(hfold(arrayRec(a), mapIdentity(), add()),
+    snap_Int_Int_Int_val(
+        hfold(arrayRec(a), mapIdentity(), add()), 
+        intRange(0, len(a)))).
+\end{lstlisting}
+We disregard the user-facing syntax for now, but the user will essentially write something similar that gets compiled down to that expression. For brevity, we write "fold(snap(intRange(0, len(a))))" as a short notation for the aforementioned fold application. This is analogous to the previous formal notation $\textrm{fold}_\sigma(\textrm{filter})$, with "snap" representing the snapshot of heap $\sigma$.  We will omit the receiver, mapping, and operator unless they are directly relevant. 
+
+Recall that our strategies for reasoning about heap-dependent folds rely on the appropriate response to each heap-modifying operation. The final strategies for heap-modifying nodes are in list \labelcref{strat:final}.
+We will go through each one of these and discuss the axioms needed to encode these strategies. As we proceed, we will also discuss the trigger choices for each of the axioms
+
+\subsection{Encoding the Reassignment Strategy}
+Considering the following program where 2 elements of the array get incremented by 1 each, we want to prove that the fold representing the sum of the array has increased by 2.
+\begin{lstlisting}
+{
+method arrayReassignment(a: Array, i: Int, j: Int) 
+    requires // access to the entire array
+    requires len(a) > 0
+    requires i >= 0 && i < len(a)
+    requires j >= 0 && j < len(a)
+    ensures // access to the entire array
+{
+    loc(a,i).val := loc(a,i).val + 1
+    label afterI
+
+    loc(a,j).val := loc(a,j).val + 1
+    label afterJ    
+    
+    assert fold(snap(intRange(0, len(a)))) == 
+            old(fold(snap(intRange(0, len(a))))) + 2
+}
+\end{lstlisting}
+We omit some of the quantified permissions for brevity.
+
+Following the input and output fold model we previously discussed, an input fold to the first reassignment node is "old(fold(snap(intRange(0, len(a)))))". The output fold should then be the same, but in a different heap state, \ie, "old[afterI](fold(snap(intRange(0, len(a))))),"
+Recall that the "old" keyword can take an optional label denoting the specific heap state. This generated output fold is considered an intermediate fold because the user only explicitly writes the fold expression in the heap state at the start and end of the method; now we have generated a fold in the state "afterI".
+
+The second thing to do for a reassignment node is to perform a decomposition on both input and output folds by removing the index reassigned. In this case, it is index "i", or in practice "recInv(loc(a,i))."  Recall we had a domain axiom, especially for such a decomposition at \cref{axm:drpone}. That axiom has the trigger "triggerDeleteKey((hfoldApply(c, snap)), key)" where the first argument is the fold application and the second argument is the key to delete, "i" in our example. 
+
+The decomposition generated will look like the following.
+\begin{lstlisting}[label=decomsin1,caption=Singleton Decomposition Example]
+hfoldApply(fo, snap) == 
+  opApply(getoperator(fo), 
+    hfoldApply1(fo, mapDelete(snap, Set(key))), 
+    snap[key])
+\end{lstlisting}
+Previously, we explained that mapDelete deletes a set of keys from a map. In practice, this is implemented as a combination of a domain function with no axiom and a postcondition of the snapshot.
+\begin{lstlisting}[label=axm:mapDelete,caption=Encoding of mapDelete]
+function mapDelete(m: Map[A,B], e: Set[A]): Map[A,B] 
+...
+function snap_Int_Int_Int_val(fo: Fold[Int, Int, Int], filter: Set[Int]): Map[Int,Int]
+    ...
+    ensures  (forall s: Set[Int] ::
+      { (mapDelete(result, s): Map[Int,Int]) }
+      s != Set[Int]() ==>
+      snap_Int_Int_Int_val_prime(fo, (filter setminus s)) ==
+      (mapDelete(result, s): Map[Int,Int]))
+\end{lstlisting}
+
+Inside the snapshot function postcondition, we have an axiom which triggers on an application of "mapDelete" on the function output and some set "s". If the set is not empty, instantiate another snapshot with the same arguments except with "filter setminus s". Since the filter input to the snap function determines the keys available in the snapshot map, this essentially removes all keys that are part of "s". 
+
+Another thing to note is that the precondition generates a \\ "snap_Int_Int_Int_val_prime," the prime version of the original snap function. We did this to prevent Viper's termination plugin from complaining and to stay consistent with the secondary folds. The folds generated in a decomposition are secondary folds annotated with a prime symbol or "1" in its Viper name. Similarly, we consider snapshots created from a decomposition to be "prime" versions. The full specifications of the "prime" snapshots are as follows.
+\begin{lstlisting}[label=snapPrime,caption=Encoding of Snapshot Prime]
+function snap_Int_Int_Int_val_prime(fo: Fold[Int, Int, Int], f: Set[Int]): Map[Int,Int]
+  requires (filterReceiverGood(f, (getreceiver(fo))))
+  requires (forall ind: Int ::
+      { (ind in f) }
+      (ind in f) ==>
+      acc((recApply((getreceiver(fo)), ind)).val))
+  ensures (filterReceiverGood(f, (getreceiver(fo))))
+\end{lstlisting}
+For snapshot primes, we remove most of the pre/post conditions of ordinary snapshots, leaving only the injectivity check via "filterReceiverGood" and the quantified permissions. The permissions used in the snap functions are important for Viper's function framing axioms, which we will use to prove the equality of folds across states. We discuss the relevance of function framing further in the upcoming paragraphs.
+
+Technically, we could axiomatize mapDelete using domain axioms to handle general maps, but we found this to cause poor performance. Ultimately, we only use mapDelete with snapshots, so we do not need to generalize it. 
+
+Going back to \cref{decomsin1}, applying the decomposition to the input fold "old(fold(snap(intRange(0, len(a)))))", we get
+\begin{lstlisting}[label=singletoniIn,caption=Decomposition of Input Fold to Reassignment at index i]
+    old(fold(snap(intRange(0, len(a))))) == 
+    old(fold(snap(intRange(0, len(a)) setminus i))) +
+    old(snap[i])".
+\end{lstlisting}
+
+Doing the same to the output fold "old[afterI](fold(snap(intRange(0, len(a)))))", we get
+\begin{lstlisting}[label=singletoniOut,caption=Decomposition of Output Fold to Reassignment at index i]
+    old[afterI](fold(snap(intRange(0, len(a))))) == 
+    old[afterI](fold(snap(intRange(0, len(a)) setminus i))) +
+    old[afterI](snap[i])".
+\end{lstlisting}
+
+Consider the 2nd term of the decomposition for both the input and output folds. the semantics of reassignment, Viper knows "old[afterI](snap[i]) = old(snap[i]) + 1." Then, to show that the fold has increased by 1, we need to prove that the 1st term of the decomposition for both input and output folds are equal; Viper derives this automatically from function framing.
+
+Recall that the snap function requires permissions to all heap elements defined by the filter, receiver, and field. If at two program points, those heap elements stay the same, then the function output is the same. In our example method, we assume that the method holds permissions to the entire array, so between the start of the method and "label afterI", no other entity could have modified the array. Altogether, Viper can derive 
+\begin{lstlisting}
+    snap(intRange(0, len(a)) setminus i) == 
+    old[afterI](snap(intRange(0, len(a)) setminus i))
+\end{lstlisting}
+because only the heap location at index "i" has been changed, and this snap instance does not need permissions to it. Keep in mind that the "old" keyword distributes inwards to the heap-dependent components in an expression. 
+Because all its arguments are provably equal, 
+\begin{lstlisting}
+    old(fold(snap(intRange(0, len(a)) setminus i))) == 
+    old[afterI](fold(snap(intRange(0, len(a)) setminus i))).
+\end{lstlisting}
+
+We can repeat the same exact steps for the reassignment to index "j", and the final assertion would verify.
+
+\subsection{Inlined Axiom for Singleton Decomposition}
+To implement this strategy, we inline an "assume" statement with an axiom at each relevant reassignment. For reassignments, the axiom is as follows. 
+\begin{lstlisting}[label=inlSingleton,caption=Singleton Decomposition Axiom]
+label previousLabel
+loc(a,i).val := loc(a,i).val + 1
+assume forall fo: Fold[Int, Int, Int], f: Set[Int] ::
+  {old[previousLabel]((hfoldApply(fo, 
+    snap_Int_Int_Int_val(fo, f)))) }
+  filterReceiverGood(f, (getreceiver(fo))) &&
+  (forall __ind: Int ::
+    { (__ind in f) }
+    (__ind in f) ==>
+    perm((recApply((getreceiver(fo)), __ind)).val) ==
+    write) ==>
+  triggerDeleteKey(
+    hfoldApply(fo, snap_Int_Int_Int_val(fo, f)),
+    (recInv((getreceiver(fo)), loc(a,i)))) &&
+  triggerDeleteKey(old[previousLabel](
+    (hfoldApply(fo, snap_Int_Int_Int_val(fo, f)))), 
+    (recInv((getreceiver(fo)), loc(a,i))))
+\end{lstlisting}
+The axiom quantifies on fold objects and filters. It triggers on an instance of a fold in the state directly before the reassignment, in our case. Note that the "old(A)" expression only works if there is a field access or a heap-dependent function in "A"; in our case, it works because of the snap function. If we instead quantified over maps, like "forall m: Map[Int,Int]," and replace the trigger with "m", the "old" expression will not work. This axiom would only instantiate for folds exactly in the state "previousLabel"; this is analogous to the local decomposition idea, which limits decomposition to fold in a specific state, local to the relevant heap-modifying node. 
+
+For well-definedness, the LHS of the axiom requires injectivity of the receiver over the filter "f", as well as the correct permissions. Then, the RHS of the axiom simultaneously generates two fold applications and decompositions. The first "hfoldApply(fo, snap_Int_Int_Int_val(fo, f))" is the output intermediate fold, and the second is the input fold. Both of them get decomposed via the "triggerDeleteKey" function, and the appropriate key is obtained from the receiver inverse function "recInv."
+
+An axiom should be generated for each combination of type variables in "Fold[A,V,B]" for existing fold instances.
+
+
+\subsection{Encoding the Exhale Strategy}
+Encoding the exhale strategy can be done in almost the same manner as the singleton strategy. If there is an exhale statement in the method that causes it to lose permissions, then we have to consider the input and output folds.
+
+An output fold to an exhale node, as described in list \labelcref{strat:final}, is $\textrm{fold}_{\sigma_j}(f')$ where $f'$ is the subset of $f$ where permissions were not lost. We previously described constructing a set of references that are lost in \cref{def:Lost} and then using that to construct the subset of $f$ with permissions not lost in \cref{def:notLost}. Let us encode these definitions in Viper.
+
+Fir
+
+\begin{lstlisting}
+var lostP_val_l1: Set[Ref]
+
+
+\end{lstlisting}
+
+
+
+
+\subsection{Inlined Axiom for Exhales Decomposition}
 
 
 
 
 
-\section{Domain Axioms and Triggers Rationale}
 
-\section{Inlined Axioms and Triggers Rationale}
+% \section{Domain Axioms and Triggers Rationale}
+
+
+
+% \section{Inlined Axioms and Triggers Rationale}
 
 \chapter{Implementation in Scala}
 To do after the 14th of December. 
 \section{User Syntax}
+
+\section{Triggers Rationale?}
 
 \section{Silver Plugin Architecture}
 

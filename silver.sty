@@ -19,6 +19,7 @@
 \newcommand{\silverbasiccolor}{\color{black}}
 
 \newcommand{\silverbasicstyle}{\ttfamily\silverbasiccolor}
+\newcommand{\silversmallerstyle}{\ttfamily\silverbasiccolor\small}
 \newcommand{\silverkeywordstyle}{\ttfamily\bfseries\silverkeywordcolor}
 
 \definecolor{darkgreen}{rgb}{0,0.3,0}
@@ -30,7 +31,8 @@
         null,
         method, function, predicate, domain, axiom, var, returns,
         requires, ensures, invariant,
-        fold, unfold, inhale, exhale, new, assert, assume, goto,
+        % fold, unfold, 
+        inhale, exhale, new, assert, assume, goto,
         while, if, elsif, else,
         fresh,
         unfolding, in,
@@ -59,7 +61,7 @@
     firstnumber=1,
     numberstyle=\tiny,
     stepnumber=1,
-    basicstyle={\silverbasicstyle},
+    basicstyle={\silversmallerstyle},
     keepspaces=true,
     keywordstyle={\silverkeywordstyle},
     ndkeywordstyle=\bfseries,
