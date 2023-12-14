@@ -262,7 +262,7 @@
 % \degreetitle{Jack of All Trades}
 
 % These commands are required.
-\title{DRAFT: Supporting Automatic Decompositions of Folds in Viper}
+\title{Supporting Automatic Decompositions of Folds in Viper}
 % \subtitle{With a Subtitle}
 \author{Peeranat Tokaeo}
 \copyrightyear{2023}
@@ -325,52 +325,44 @@
 
 \clearpage
 
-% \begin{abstract}                %% Mandatory -  maximum 350 words
-%   The \texttt{genthesis.cls} \LaTeX{} class file and accompanying
-%   documents, such as this sample thesis, are distributed in the hope
-%   that it will be useful but without any warranty (without even the
-%   implied warranty of fitness for a particular purpose).  For a
-%   description of this file's purpose and instructions on its use, see
-%   below.
-
-%   These files are distributed under the GPL, which should be included
-%   here in the future.  Please let the author know of any changes or
-%   improvements that should be made.\footnote{This thesis template was uploaded to OverLeaf in 2021 by UBC MSc student Naba Mukhtar and modified to recent UBC requirements by Leah Edelstein-Keshet September 2021.}
-
-%   Michael Forbes.
-%   mforbes@physics.ubc.ca, michael.forbes@wsu.edu
+\begin{abstract}                %% Mandatory -  maximum 350 words
+In progress
   
-% \end{abstract}
+\end{abstract}
 
-% \chapter{Lay Summary}
+\chapter{Lay Summary}
 
-% [Required, Maximum 150 words]
+[Required, Maximum 150 words]
 
-% This is a simple summary of your thesis, written so that members of the public will get some idea about what you have done. 
+This is a simple summary of your thesis, written so that members of the public will get some idea about what you have done. 
 
-% \chapter{Preface} % Mandatory if any of the conditions are met
+\chapter{Preface} % Mandatory if any of the conditions are met
+This thesis is original, unpublished, independent work by Peeranat Tokaeo. Alex Summers was the supervisor and helped advised on the project's direction throughout.
 
-% %%% Sections and subsections etc., in the Preface should, in general
-% %%% not be listed in the table of contents, so use the starred form
-% %%% of \section etc.
+%%% Sections and subsections etc., in the Preface should, in general
+%%% not be listed in the table of contents, so use the starred form
+%%% of \section etc.
 % \section*{Examples}
 % Note that this preface must come before the table of contents.  Note
 % also that this section ``Examples'' should not be listed in the table
 % of contents, so we have used the starred form: \verb|\section*{Example}|.
 
 \tableofcontents                %% Mandatory
-% \listoftables                   %% Mandatory if the thesis has tables
-% \listoffigures                  %% Mandatory if the thesis has figures
+\listoftables                   %% Mandatory if the thesis has tables
+\listoffigures                  %% Mandatory if the thesis has figures
 % \listof{Program}{List of Programs} %% Optional
 %% Any other lists should come here, i.e.
 %% Abbreviation schemes, definitions, lists of formulae, list of
 %% schemes, glossary, list of symbols etc.
 
-% \chapter{Acknowledgements}      %% Optional
+\chapter{Acknowledgements}      %% Optional
+Thanks everyone.
+
 % This is the place to thank professional colleagues and people who have
 % given you the most help during the course of your graduate work.
 
 % \chapter{Dedication} %% Optional
+% Dedicated to my do
 % The dedication is usually quite short, and is a personal rather than
 % an academic recognition.  The \emph{Dedication} does not have to be
 % titled, but it must appear in the table of contents.  If you want to
@@ -389,47 +381,52 @@
 \mainmatter
 
 % Parts are the largest structural units, but are optional.
-%\part{Thesis}
+% \part{Thesis}
 
 % Chapters are the next main unit.
-\chapter{Introduction}
+\chapter{Motivations}
+Many useful programs rely on data structures on the program heap, like arrays and lists, for data storage and manipulation. As such, to prove many interesting properties of a program, a program verifier like Viper should be capable of modelling these data structures. 
 
-% Sections are a sub-unit
-\section{Motivations}
-Here is a section with some text.  Equations look like this
-$y=x$.\footnote{Here is a footnote.}
+There are two main ways to describe data structures on the heap in Viper: predicates and quantified permissions. Viper predicates can represent recursive data structures, while quantified permissions allow users to write assertions flatly about a random-access data structure. Together with predicates, Viper functions can denote properties of a recursive data structure. However, no such construct exists for quantified permissions, and expressing aggregate properties on a random-access data structure is difficult. We will refer to these aggregate properties as folds from hereon. Consider the following example with arrays.
 
-This is an example of a second paragraph in a section so you can
-see how much it is indented by.
+Suppose we want to model a random-access array in Viper and describe some of its properties. Firstly, Viper models mutable data as data on the heap. Each unit of data is stored at a field location, also known as a heap location. So, to express having access to an entire array "a", one may write the following:
+\begin{lstlisting}
+forall i: Int :: i >= 0 && i < len(a) ==> acc(a[i])
+\end{lstlisting}
+Here, we use an abbreviation "a[i]" to denote the heap location of array a at index i. This expression uses a feature called quantified permissions, which involves quantifying over all integer indices "i" and expressing that the program has access to the array element corresponding to each index. By design, this definition of an array with quantified permissions is flat and does not involve recursion. We can express all the indices in the array together at once, following the data structure’s random-access nature. 
+
+However, if we try writing cumulative properties over the entire array, the proofs will still require induction. Suppose we want to express the sum of all elements in an array, starting from some arbitrary index "start" up to the array length. Then, we can write the following function:
+\begin{lstlisting}
+function arraySum(a: Array, start: Int) : Int
+    requires forall i: Int :: i >= start && i < len(a) 
+        ==> acc(a[i])
+    requires start >= 0 && start <= len(a)
+{
+    start >= len(a) ? 0 : a[start] + arraySum(a, start + 1)
+}
+\end{lstlisting}
+This sum function requires access to the array from the indices "start" to the array length. Note that the sum function is defined recursively on the start index. All proofs involving changes in the sum will now require induction. 
+
+However, this is in contrast to the random-access nature of arrays. Suppose an array element has changed at index "i". To show the change to the total sum of all elements, we would need to unroll the body of "arraySum" up to index "i" in a proof by induction. 
+
+Instead, we can ideally observe that this property is an unordered fold, and the sum could be decomposed into 
+\begin{lstlisting}
+sumArray(a) = sumArray_{excluding_index_i}(a) + a[i].
+\end{lstlisting}
+\ie, the sum of an array is the "i"th element plus the sum of all other elements. This splitting of the fold is called a decomposition
+
+Unfortunately, this kind of reasoning is not supported automatically by native Viper. In this master's thesis, we add to Viper the support for expressing and proving these properties as folds on random-access data structures. We implement a Viper plugin that introduces a new syntax for expressing folds on any user-defined data structures and generates relevant axioms in the background. In addition, the plugin will perform decompositions on the relevant folds automatically in response to program heap changes; this allows for reasoning without recursion, like the sumArray example above. Altogether, this plugin should help the user prove fold-like properties more succinctly, without requiring recursion or induction.
 
 % Subsections follow
-\section{Related Works}
+\section{Related Works (Brief)}
+There are a few past attempts to support reasoning about folds. In his Ph.D. thesis, Ter-Gabrielyan describes possible axiomatizations and Viper representations of folds as a way to express heap reachability properties. He introduces the idea of heap snapshots, which we utilize in our own project. However, his technique only serves as a demonstration and does not support automatic decompositions for the proofs, which we do. 
 
-to use look at the file \texttt{ubcsample.bbl} after you compile this
-file.\footnote{Here is another footnote.}
-
-\subsubsection{This is a Subsubsection}
-Here are some more citations \cite{LL3:1977,Peccei:1989,Turner:1999}.
-If you use the \texttt{natbib} package with the \verb+sort&compress+
-option, then the following citation will look the same as the first
-citation in this section: \cite{Turner:1999,Peccei:1989,LL3:1977}.
-
-
-\begin{table}[t]                 % optional [t, b or h];
-  \begin{tabular}{|r||r@{.}l|}
-    \hline
-    Phoenix & \$960&35\\
-    \hline
-    Calgary & \$250&00\\
-    \hline
-  \end{tabular}
-  \caption[Here is the caption for this wonderful table\ldots]{
-    \label{tab:Table1}
-    Here is the caption for this wonderful table. It has not been
-    centered and the positioning has been specified to be at the top
-    of the page.  Thus it appears above the babble rather than below
-    where it is defined in the source file.}
-\end{table}
+Tierry Hoermann’s bachelor’s thesis also provides specifications and encodings of folds in Viper, but similarly, they require decompositions that are not fully automatic. His axioms involve universal quantifiers that quantify over heaps, which can only be done in Boogie, a language which Viper compiles when using the Carbon verifier. 
+Unfortunately, implementation details were largely omitted, and the project code on Bitbucket is no longer accessible. We are unable to reproduce his results.
+	
+Outside of Viper, the Spec\# program verifier provides a number of predefined fold expressions, namely sum, count, product, min and max. Each type of fold is supported by Boogie axioms inductive on integers. 
+A user could potentially decompose the integer range into two sub-ranges to circumvent inductive reasoning, but this must be done manually. 
+Otherwise, the user will still tend to rely on induction for the proofs involving folds. In contrast to Spec\#, our tool allows the user to define their own operation, which is not limited to sums, products, etc. We also allow the iterator variable to be of arbitrary type, not restricted to integers. The axioms we generate are general to all of these types and operations, allowing more flexible use cases. We also support automatic decompositions with no additional user inputs required.
 
 % Force a new page: without this, the quote would appear on the
 % previous page.
@@ -1234,7 +1231,7 @@ with filter $f$, receiver $r$, and field $F$, where heap $\sigma$ is the current
 To translate this into Viper, there are a few challenges. Firstly, Viper does not allow first-class functions. Viper supports first-order logic, so we cannot quantify over functions, and function arguments cannot be functions. The second challenge comes from the limitations in interacting with the heap. Although the heap is part of the Viper program state, the heap is not an expression. Like functions, the heap is not a valid function argument and cannot be a quantified variable. 
 
 \subsection{Defunctionalization}
-To solve the first challenge, we first apply defunctionalization to convert each input function to a combination of domain declarations. First, we declare the domain types for each of the function arguments to a fold. We declare "Receiver[A]", "Operator[B]", "Mapping[V,B]" as domain types with type arguments "A", "V", and "B". The filters can be represented with a Viper's builtin "Set", so we do not define new types for them.
+To solve the first challenge, we first apply defunctionalization to convert each input function to a combination of domain declarations. First, we declare the domain types for each of the function arguments to a fold. We declare "Receiver[A]", "Operator[B]", "Mapping[V,B]" as domain types with type arguments "A", "V", and "B". The filters can be represented with a Viper's built-in "Set", so we do not define new types.
 
 For each of these domain types, we define an "apply" function that takes the newly defined types as the first argument. For example, the receiver domain has a function "recApply(r: Receiver[A], a: A) : Ref". Then, we declare axioms to describe the results of these functions. These axioms depend on the function definitions written by the user. If the axioms refer to a specific instance, like "Receiver[Int]" with type variable "A" replaced by "Int", it can even be written in a different domain. For now, here is the "Receiver" domain declaration with the axiom
 \begin{lstlisting}
@@ -1382,7 +1379,7 @@ hfoldApply(fo, snap) ==
 \end{lstlisting}
 In other words, if the element "key" is in the filter, then "hfold(snap) = op(hfold1(snap - key), snap[key])" (omitting the defuntionalization for brevity). There are a few things to observe with this axiom. Firstly, the trigger has a function "triggerDeleteKey(...)", which we have not discussed. This is simply a dummy boolean function used to trigger the axiom when necessary. The plugin will assume an instance of this dummy trigger function when we intend to perform a decomposition, as described in the reassignment strategy in the last chapter.
 
-The other interesting point is the operations on the snap function. As described earlier, "domain(snap)" refers to the filter. In the the previous chapter, a singleton decomposition involves removing a key from the filter, which we encoded here as "mapDelete(snap, Set(key))". Viper built-in "Map" type does not have a function that deletes keys, so our plugin generates those manually. For now, think of "mapDelete" as deleting a set of keys from the snapshot, which is equivalent to removing keys from the filters. We will discuss further details about the snapshot function later.
+The other interesting point is the operations on the snap function. As described earlier, "domain(snap)" refers to the filter. In the the previous chapter, a singleton decomposition involves removing a key from the filter, which we encoded here as "mapDelete(snap, Set(key))". Viper's built-in "Map" type does not have a function that deletes keys, so our plugin generates those manually. For now, think of "mapDelete" as deleting a set of keys from the snapshot, which is equivalent to removing keys from the filters. We will discuss further details about the snapshot function later.
 
 This axiom generates only one new secondary fold. The second fold from the decomposition is a fold with a singleton filter, so we inline its evaluation, \ie, "snap[key]" explicitly.
 
@@ -1442,9 +1439,9 @@ axiom {
 \end{lstlisting}
 The axiom relates the "Receiver[Int]"'s application to the Array domain's "loc" function. One thing to note is that the "loc" function takes two arguments: an array and an index. But a receiver function, by definition, only takes one input. We circumvent this issue by having "arrayRec" take an array argument to output a "Receiver[Int]" instance. That array argument can now be considered like a field in the object and can be used in the axiom. So technically, "recApply" still only takes one argument in addition to self, \ie, "arrayRec(a)".
 
-The triggers for the axioms are chosen to be "recApply(arrayRec(a), i)" or "loc(a,i)". Triggers written in two curly braces are considered disjunction triggers; only one must match to instantiate the axiom. We have added both the LHS and RHS of the equations to ensure bidirectional triggering. Bidirectional triggering is a heuristic for choosing a trigger by ensuring that a universal quantifier involving an implication or equality can be triggered both by the left hand terms or the right hand terms, improving completeness. More discussion on picking triggers will come in the next sections.
+The triggers for the axioms are chosen to be "recApply(arrayRec(a), i)" or "loc(a,i)". Triggers written in two curly braces are considered disjunction triggers; only one must match to instantiate the axiom. We have added both the LHS and RHS of the equations to ensure bidirectional triggering. Bidirectional triggering is a heuristic for choosing a trigger by ensuring that a universal quantifier involving an implication or equality can be triggered both by the left-hand terms or the right-hand terms, improving completeness. More discussion on picking triggers will come in the next sections.
 
-Next, we create a mapping function instance, \ie, "Mapping[Int,Int]". For an array sum, this should just be the identity function. We can define a general identity mapping function because it will be quite commonly.
+Next, we create a mapping function instance, \ie, "Mapping[Int,Int]". For an array sum, this should just be the identity function. We can define a general identity mapping function because it will be quite common.
 \begin{lstlisting}
 function mapIdentity(): Mapping[V, V] 
   
@@ -1885,13 +1882,64 @@ Technically, some of these terms will be in terms of "setminus" and "filterNotLo
 The output fold generated will be "fold(snap(intRange(i, len(a))))," which by Viper framing is equal to "old(fold(snap(intRange(i, len(a)))))." The assertion will go through because $6 + 4 = 10$.
 
 \subsection{Encoding the Inhale Strategy }
-Finally, we encoding the inhale strategy as described in the definition on \cpageref{strat:final}.
-
-As  inhale strategy, we start with an input fold .  
-
+Finally, we encode the inhale strategy as described in the definition on \cpageref{strat:final} and the list above the definition.  Starting from some input "fold(snap(f))", we want to construct an output fold "fold(snap(f*))" where "f*" is a bigger filter. We derive this bigger filter from an input fold to exhale nodes. Recall that we introduce the function "exhaleCompMap(fo, m, id)" for saving the input folds to exhale nodes and their snapshot "m". We will use this as a trigger in the inlined axiom for inhale.
 
 \subsection{Inlined Axiom For Inhale Decomposition}
+Our plugin inlines the following assume statement after a relevant inhale where permissions are gained. Suppose the state before the inhale has the label "l0", and the inhale node has input filter "fold(snap(f))."
+\begin{lstlisting}
+assume (forall fo: Fold[Int, Int, Int], f: Set[Int], m: Map[Int,Int] ::
+  { old[l0]((hfoldApply(fo, snap_Int_Int_Int_val(fo, f)))),
+  (exhaleCompMap(fo, m, 0)) }
+  filterReceiverGood(f, (getreceiver(fo))) &&
+  (filterReceiverGood(domain(m), (getreceiver(fo))) &&
+  (f subset domain(m)) &&
+  (forall __ind: Int ::
+    { (__ind in domain(m)) }
+    (__ind in domain(m)) ==>
+    perm((recApply((getreceiver(fo)), __ind)).val) ==
+    write)) ==>
+  triggerDeleteBlock(
+    (hfoldApply(fo, snap_Int_Int_Int_val(fo, domain(m)))),f) &&
+  triggerDeleteBlock(
+    (hfoldApply(fo, m)), f))
+\end{lstlisting}
+The trigger for this axiom is a fold application immediately before the inhale statement (in state "l0"), and "exhaleCompMap(fo, m, 0)," where 0 is the fieldID of field "val". Our plugin will keep track of these IDs internally, and each field will have a unique ID.  The "exhaleCompMap" will be generated for all folds and snapshots that are input folds to exhale nodes, and each instance of the function application will match the trigger. We obtain the big filter "f*" by taking the domain of map "m" as matched in the trigger "exhaleCompMap(fo, m, 0)." Recall that the domain of a snapshot is its filter argument.
 
+The LHS of the axioms denotes the well-definedness checks, such as the injectivity of the receiver and the usual permissions. There are two separate injectivity conditions; the first is the injectivity of the input fold to the inhale. The second is the injectivity of the output fold, which we will generate. The third condition on the LHS "(f subset domain(m))" requires that the input fold's filter "f" is actually a subset of "f*". The final condition on the LHS uses quantified permissions to check that the method has permissions to the heap locations denoted by filter "f*".
+
+On the RHS of the axiom, the first "triggerDeleteBlock" generates the output fold "fold(snap(f*))" and decomposes it by subtracting the filter "f" simultaneously. The second "triggerDeleteBlock" decomposes the exhale node's input fold in the same way for symmetry, as previously described.
+
+
+% \subsection{Example: Putting it all Together}
+
+% Consider the following example with exhales, reassignments, and inhales. We will describe how out strategies work to verify the assertions at the end. Assume that the appropriate inlining happens, all permissions are held at the start of the method, and the fold we consider is the array sum.  
+% \begin{lstlisting}
+% label l0
+% exhale forall i: Int :: i in intRange(8,10) ==> 
+%         acc(loc(a,i).val)
+% label l1
+% loc(a,0).val := loc(a,0).val + 1 
+% label l2
+% exhale forall i: Int :: i in intRange(4,8) ==> 
+%         acc(loc(a,i).val)
+% label l3
+% loc(a,0).val := loc(a,0).val + 1 
+% label l4
+% inhale forall i: Int :: i in intRange(4,10) ==> 
+%         acc(loc(a,i).val)
+% label l5
+%     // frame axiom
+
+% inhale forall i: Int :: i in intRange(4,10) ==> 
+%         loc(a,i).val == old(loc(a,i).val)
+
+% // using short notation of fold
+% assert fold[sum](snap(intRange(0,4))) == old(fold[sum](snap(intRange(0,4)))) + 2
+% assert fold[sum](snap(intRange(0,10))) == old(fold[sum](snap(intRange(0,10)))) + 2
+% \end{lstlisting}
+% There are 5 heap-modifying nodes in this program (the last inhale does not modify state). At the very start, there are two different fold inputs: "old(fold[sum](snap(intRange(0,4))))" and "old(fold[sum](snap(intRange(0,10))))". Let us first consider the first one.
+
+% The fold input "old(fold[sum](snap(intRange(0,4))))" enters the first exhale node, and generates the output fold "old[l1](fold(snap(intRange(0,4))))" with no decompositions, because the exhale did not lost any permissions to this fold's filter. The next reassignment node would 
 
 
 \chapter{Implementation in Scala}
