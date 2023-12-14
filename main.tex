@@ -79,7 +79,7 @@
 }
 
 \input{macros_alex}
-\lstset{language=silver,numbers=left, firstnumber=1, stepnumber=1}
+\lstset{language=silver,numbers=left, firstnumber=1, stepnumber=1,captionpos=b}
 \lstMakeShortInline[language=silver,
                basicstyle=\normalsize\silverbasicstyle,
                keywordstyle=\normalsize\silverkeywordstyle,
@@ -433,14 +433,13 @@ Otherwise, the user will still tend to rely on induction for the proofs involvin
 \newpage
 
 \chapter{Background}
+In this chapter, we explain the background knowledge required for understanding the rest of the thesis.
 
-\section{Program Verification}
 
-Program verification is the process of proving the correctness of a program according to its formal specifications. In this process, the programmer first annotates the source program with assertions written in a specification language. The source program is then transformed into a verification language program, usually with the help of a verification frontend. Finally, a program verifier checks the program statically, \ie, without executing the program, to verify the annotated assertions.
+\section{Program Verification and Viper}
+Program verification is the process of proving the correctness of a program according to its formal specifications. In this process, the programmer first annotates the source program with assertions written in a specification language. A program verifier then checks the annotated program statically, \ie, without executing the program, to verify the annotated assertions. Before the verification, certain verifiers will transform the source program into a verification language program through a verification frontend. For example, the Prusti \cite{prusti} and Gobra \cite{gobra} verifiers transform Rust and Go programs, respectively, into the Viper verification language.
 
-\section{Viper}
-
-Viper is a verification infrastructure which provides an intermediate verification language and two built-in verifier backends. The first backend, Silicon, relies on symbolic execution, and the second backend, Carbon, generates verification conditions in Boogie, another intermediate verification language. Both ultimately use the SMT solver Z3 to check the validity of the input Viper program. Typically, we use the word "Viper" to refer to the intermediate verification language and "Viper backends" to refer to the two backends as described. A Viper frontend, such as Gobra or Prusti, extends a general-purpose programming language with a specification language for annotations and ultimately compiles the program from the source language into Viper for verification. 
+Viper \cite{viper} is a verification infrastructure which provides an intermediate verification language and two built-in verifier backends. The first backend, Silicon, relies on symbolic execution, and the second backend, Carbon, generates verification conditions in Boogie, another intermediate verification language. Both ultimately use the SMT solver Z3 to check the validity of the input Viper program. Typically, we use the word \emph{Viper} to refer to the intermediate verification language and \emph{Viper backends} to refer to the two backends as described. A Viper frontend, such as Gobra or Prusti, extends a general-purpose programming language with a specification language for annotations and ultimately compiles the program from the source language into Viper for verification. 
 
 \section{Viper Framing and Permissions}
 A key feature of Viper is its support for permissions logic, which is a solution to the frame problem of heap-modifying programs.
@@ -463,25 +462,31 @@ method modifyState(a: Array, i: Int)
 The postcondition of the method ensures that the array element at index "i" has a value of 10, but the method body also modifies the element at index 0. The method specifications (without the body) do not specify the values at other array indices, so for soundness, the method caller has to assume that all elements could have changed.
 
 Alternatively, the programmer would have to write more verbose pre/post-conditions to describe the unchanged portion of the global state. For example, the modifyState method specifications must be rewritten to include a framing axiom, \ie, an axiom that prescribes the states that remained unchanged.
+\begin{minipage}{\linewidth}
 \begin{lstlisting}
 method modifyState(a: Array, i: Int)
     requires length(a) > i
     ensures a[i] == 10
     ensures forall j: Int ::   
-        j != i && j != 0 ==> a[j] == old(a[j])  
+        j != i && j >= 0 && j < length(a)  ==> 
+         a[j] == old(a[j])  
             // old means the state before the method execution 
 {
     a[i] := 10
     a[0] := 0
 }
 \end{lstlisting}
-This becomes excessive very quickly because additional axioms must be added for all heap locations, and every modular heap-modifying component must contain these axioms. 
-
+\end{minipage}
+This becomes excessive very quickly because additional assumptions must be added for all heap locations, and every modular heap-modifying component must contain these axioms. In fact, we cannot write assumes describing all other heap data in a modular way. The example method only concerns array indices 0 and "i", but the postconditions must describe the values at every other index. This is not modular.
 
 \subsection{Permissions}
-To mitigate the frame problem, Viper uses permission logic to describe heap location permissions that a method may have. A permission is a key to access a heap location, and each heap location has exactly 1/1 permissions. Modular program components in Viper, such as methods, functions, and loops, require permission for specific locations to read and/or modify them. They can also have fractional permissions, which may allow components to read the heap locations but not modify them. To write, it needs to have full permissions, \ie, 1/1. Fractional permissions are particularly useful for modelling concurrent programs with methods accessing the same global state concurrently.
+To mitigate the frame problem, Viper uses a \emph{permission logic} to describe heap location permissions that a method may have. A permission is a key to access a heap location, and each heap location has exactly 1/1 permissions. Modular program components in Viper, such as methods, functions, and loops, require permission for specific locations to read and/or modify them. They can also have fractional permissions, which may allow components to read the heap locations but not modify them. To write, the method needs to hold full permissions, \ie, 1/1. Fractional permissions are particularly useful for modelling concurrent programs with methods accessing the same global state concurrently.
 
-Permissions frame the method implicitly because the method can only use and/or modify the global state that it has permissions to; any other global state is assumed to be unchanged by the method. Going back to the "modifyState" example, we can include the permissions in the method's pre/post conditions.  
+Framing is achieved when a method has permission to heap locations across two states. Those heap locations are considered unchanged between two states unless modified explicitly by the method itself. If the current method holds some permission to a heap location, other methods would not have full permission, so they cannot possibly modify that state. 
+% Permissions frame the method implicitly because the method can only use and/or modify the global state that it has permissions to; any other global state is assumed to be unchanged by the method. 
+Going back to the "modifyState" example, we can include the permissions in the method's pre/post conditions, as shown in \cref{modifyState}. 
+
+\begin{figure}[h]
 \begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
 method modifyState(a: Array, i: Int)
     requires length(a) > i
@@ -493,33 +498,25 @@ method modifyState(a: Array, i: Int)
     a[0] := 0
 }
 \end{lstlisting}
-Here, the method only takes permissions to array indices 0 and "i", so any other index can be assumed unchanged. The specification does not need to include an explicit framing axiom denoting that all other indices remain the same.
+\caption{modifyState Example with Permissions}  \label{modifyState}
+\end{figure}
 
-From a modular component's perspective, giving permissions away, such as by calling a method, means losing knowledge about a certain global state. Likewise, if a method holds permissions for a heap location, it knows that the location could not have been modified while it currently holds permissions. There is only 1 permission per heap location, and any other method would have needed permissions to modify it. 
+Suppose that another method calls "modifyState".
+The method call only takes permissions to array indices 0 and "i". Any other index can be assumed unchanged, provided the caller has these permissions. The specification does not need to include an explicit framing axiom denoting that all other indices remain the same. Unrelated heap locations, relevant only to the caller, do not need to be described in the "modifyState"; this makes the method specifications modular
+
+From a modular component's perspective, giving permissions away, such as by calling a method, means losing knowledge about a heap location. Likewise, if a method holds permissions for a heap location, it knows that the location could not have been modified while it currently holds permissions. There is only 1 permission per heap location, and any other method would have needed permissions to modify it. 
 
 Notice also that the "modifyState" method takes permissions in the "requires" but also gives those permissions back in the "ensures." From the caller's perspective, it gives "modifyState" permissions and gets the permissions back after that method is finished.
 
 The kind of permission logic Viper employs is more precisely called implicit dynamic frames. ``Frames'' refers to framing modular program components, like method calls, function calls, and loops. ``Implicit'' refers to how the frames are implicitly determined by the permissions given to a method, and methods are framed to the portion of the global state to which they have permissions. No explicit framing axioms are required. The frames are ``dynamic'' because the permissions may depend on values in the program, so permission checks must be done with calls to the SMT solver.
 
 \section{Viper Basic Features and Syntax}
-Next, we will discuss some of the fundamental Viper constructs in this section for future reference when demonstrating our design with Viper code. The code examples that we have described so far are in pseudocode. So, in this section, we will introduce the correct Viper constructs to transform our pseudocode example to real Viper. Let us use the last pseudocode code snippet we discussed as the leading example.
-
-\begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
-method modifyState(a: Array, i: Int)
-    requires length(a) > i
-    requires acc(a[i]) && acc(a[0]) // takes permissions
-    ensures a[i] == 10
-    ensures  acc(a[i]) && acc(a[0]) // gives permissions
-{
-    a[i] := 10
-    a[0] := 0
-}
-\end{lstlisting}
+Next, we will discuss some of the fundamental Viper constructs needed for future reference when demonstrating our design with Viper code. The code examples that we have described so far are in pseudocode. So, in this section, we will introduce the correct Viper constructs to transform our pseudocode example to real Viper. Let us use the previous pseudocode code snippet in \cref{modifyState} as the leading example.
 
 \subsection{Methods}
-Our "modifyState" snippet above is a method declaration. A Viper method is a sequence of statements where much of Viper's verification happens. Viper handles a method call modularly by only using the method's pre and post-conditions, which are denoted in the method declaration with keywords \lstinline{requires} and \lstinline{ensures}. Viper verifies that the method satisfies its specifications once, and any calls to the method get abstracted into its specifications.
+Our "modifyState" snippet above is a method declaration. A Viper method is a sequence of statements where much of Viper's verification happens. Viper handles a method call modularly by only using the method's pre-conditions and post-conditions, which are denoted in the method declaration with keywords \lstinline{requires} and \lstinline{ensures}, respectively. Viper verifies that the method satisfies its specifications once, and any calls to the method get abstracted by its specifications.
 
-In verifying a method, Viper first assumes the preconditions, verifies the body, and then verifies that the post-condition holds. Verifying and calling a method have opposite behaviours. Verifying a method means inhaling its preconditions and exhaling its postconditions. Calling a method means exhaling the preconditions and inhaling the post-conditions. For now, think of exhales as asserts and inhales as assumes. "assert" will check the condition written in the statement, and "assume" will assume the conditions as true. If another method, "caller," calls "modifyState", the call essentially gets translated into exhales and inhales, as in the following example.
+In verifying a method, Viper first assumes the preconditions, verifies the body, and then verifies that the post-condition holds. Verifying and calling a method have opposite behaviours. Verifying a method means inhaling \footnote{For now, think of exhales as asserts and inhales as assumes. We discuss their differences later.} its preconditions and exhaling its postconditions. Calling a method means exhaling the preconditions and inhaling the post-conditions.  "assert" will check the condition written in the statement, and "assume" will assume the conditions as true. If another method, "caller," calls "modifyState", the call essentially gets translated into exhales and inhales, as in the following example.
 \begin{lstlisting}[language=silver,numbers=left, firstnumber=1, stepnumber=1]
 method caller(a: Array, i: Int)
     requires length(a) > i
@@ -740,9 +737,9 @@ A function defined outside of a domain can have its own body and pre and post-co
 In the above code snippet, the \lstinline|unfolding| keyword allows the program to access terms inside the predicate instance. In the \lstinline|listSum| function body, we read \lstinline|l|’s next field, whose permissions we acquire from unfolding the predicate \lstinline|list(l)|. It is worth noting that the function is defined recursively to match the recursive structure of the list defined in the \lstinline|list| predicate. Together, predicates and functions allow us to model recursive data structures and describe their properties. However, for random-access data structures, it is more appropriate to use quantified permissions.
 
 \chapter{Design}
-Now that we have explained most of the background information, we proceed to discuss heap-dependent folds. Some of the background details were omitted for brevity, but we will explain them more thoroughly when necessary.
-
-In this chapter, we will formally define heap-dependent folds and discuss the axiomatizations to allow reasoning about them in Viper. Although the design is for Viper, in this chapter we avoid discussing too deeply into the implementation details, keeping things more mathematical. The next chapter will discuss the Viper axioms in more detail, including selecting triggers, controlling instantiations, \etc.
+Now that we have explained most of the background information, we proceed to discuss heap-dependent folds, which is the main feature we intend to implement in Viper. 
+% Some of the background details were omitted for brevity, but we will explain them more thoroughly when necessary.
+In this chapter, we will formally define heap-dependent folds and discuss the axiomatizations to allow reasoning about them in Viper. Although the design is for Viper, in this chapter we avoid going too deeply into the implementation details, keeping things more mathematical. The next chapter will discuss the Viper axioms we designed in more detail, including selecting triggers, controlling instantiations, \etc.
 
 \section{Heap-Dependent Fold}
 We define fold as a function that takes a set of values and returns a value describing a property about the input set. As such, a fold might also be called an aggregate property or a comprehension. For our purposes, the input set of values are values extracted from the heap, so the more precise name is heap-dependent fold.
