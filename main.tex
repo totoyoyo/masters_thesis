@@ -87,7 +87,7 @@
 \usepackage{amsthm}
 
 \theoremstyle{definition}
-\newtheorem{definition}{Definition}[section]
+\newtheorem{definition}{Definition}
 
 
 %******** afterpage ***************************
@@ -1088,7 +1088,7 @@ $$L := \sigma_0.\textrm{keys}(F) - \sigma_1.\textrm{keys}(F),$$
 \end{definition}
 
 Then, we define the filter of remaining elements $f'$ as
-\begin{definition}[Remaining References]\label{def:notLost}
+\begin{definition}[Filter Not Lost]\label{def:notLost}
 $$f' := \{e \in f | r(e) \not\in L \},$$ where $r$ is the receiver function. 
 \end{definition}
 By definition, $f'$ guarantees that $\textrm{fold}_{\sigma_1}(f')$ is well-defined with regards to permissions. 
@@ -1189,13 +1189,16 @@ To explain the strategy in more detail:
 Then, similar to the exhale strategy, we decompose this output fold $\textrm{fold}_{\sigma_{new}}(f^*)$ by subtracting the filter $f$, which is part of the input fold. At the exhale node, the input fold $\textrm{fold}_{\sigma_{old}}(f^*)$ should also be decomposed by subtracting the filter $f$ for symmetry. 
 
 So, the final strategies for heap-modifying nodes are
-\begin{enumerate} \label{strat:final}
+\begin{definition}[Final Strategies] \label{strat:final}
+There are the final strategies for each heap-modifying statement.
+\begin{enumerate} 
     \item Reassignment $r(i).F := ...$, mutating heap from $\sigma_i$ to $\sigma_j$: 
     If input fold is $\textrm{fold}_{\sigma_i}(f)$, then output fold is $\textrm{fold}_{\sigma_j}(f)$. 
     Decompose by removing $i$ from both folds.
     \item Exhale, mutating heap from $\sigma_i$ to $\sigma_j$ via permission loss. If input fold is $\textrm{fold}_{\sigma_i}(f)$, then output fold is $\textrm{fold}_{\sigma_j}(f')$ where $f'$ is the subset of $f$ where permissions were not lost. Decompose by subtracting $f'$ from $f$ for the fold inputs. Fold outputs do not need a decomposition.
     \item Inhale: mutating heap from $\sigma_i$ to $\sigma_j$ via permission gain. If the input fold is $\textrm{fold}_{\sigma_i}(f)$, search the input folds to previous exhales for a filter $f^* \supset f$. If new heap state has permissions to $f^*$, construct the output fold $\textrm{fold}_{\sigma_j}(f^*)$. Decompose the output fold by subtracting $f$ from $f^*$. Fold inputs do not need a decomposition.
 \end{enumerate}
+\end{definition}
 
 \subsection{Folds Flowing Backwards with Lookahead}
 There are certain limitations to this inhale strategy. If there are inhale statements without prior exhales, then our strategy does not generate any output fold. We become reliant on the user writing the fold manually. 
@@ -1385,7 +1388,7 @@ This axiom generates only one new secondary fold. The second fold from the decom
 
 \subsubsection{Set Decomposition Axiom}
 The next type of decomposition involves subtracting a whole filter.
-\begin{lstlisting}
+\begin{lstlisting}[label=loseMany, caption:Domain Axiom for General Decomposition]
 axiom loseMany {
 forall c: Fold[A, V, B], snap1: Map[A,B], keys: Set[A] ::
 { triggerDeleteBlock((hfoldApply(c, snap1)), keys) }
@@ -1627,7 +1630,7 @@ hfoldApply(hfold(arrayRec(a), mapIdentity(), add()),
 \end{lstlisting}
 We disregard the user-facing syntax for now, but the user will essentially write something similar that gets compiled down to that expression. For brevity, we write "fold(snap(intRange(0, len(a))))" as a short notation for the aforementioned fold application. This is analogous to the previous formal notation $\textrm{fold}_\sigma(\textrm{filter})$, with "snap" representing the snapshot of heap $\sigma$.  We will omit the receiver, mapping, and operator unless they are directly relevant. 
 
-Recall that our strategies for reasoning about heap-dependent folds rely on the appropriate response to each heap-modifying operation. The final strategies for heap-modifying nodes are in list \labelcref{strat:final}.
+Recall that our strategies for reasoning about heap-dependent folds rely on the appropriate response to each heap-modifying operation. The final strategies for heap-modifying nodes are in the definition on \cpageref{strat:final}.
 We will go through each one of these and discuss the axioms needed to encode these strategies. As we proceed, we will also discuss the trigger choices for each of the axioms
 
 \subsection{Encoding the Reassignment Strategy}
@@ -1755,31 +1758,141 @@ An axiom should be generated for each combination of type variables in "Fold[A,V
 \subsection{Encoding the Exhale Strategy}
 Encoding the exhale strategy can be done in almost the same manner as the singleton strategy. If there is an exhale statement in the method that causes it to lose permissions, then we have to consider the input and output folds.
 
-An output fold to an exhale node, as described in list \labelcref{strat:final}, is $\textrm{fold}_{\sigma_j}(f')$ where $f'$ is the subset of $f$ where permissions were not lost. We previously described constructing a set of references that are lost in \cref{def:Lost} and then using that to construct the subset of $f$ with permissions not lost in \cref{def:notLost}. Let us encode these definitions in Viper.
+An output fold to an exhale node, as described in the definition on \cpageref{strat:final}, is $\textrm{fold}_{\sigma_j}(f')$ where $f'$ is the subset of $f$ where permissions were not lost. We previously described constructing a set of references that are lost in \cref{def:Lost} of \cpageref{def:Lost} and then using that to construct the subset of $f$ with permissions not lost in \cref{def:notLost}. Let us encode these definitions in Viper.
 
-Fir
+Let us consider the following working example.
+\begin{lstlisting}[caption=Array Exhale Example]
+{
+method arrayExhale(a: Array, i: Int) 
+    requires // access to the entire array
+    requires len(a) > 0
+    requires i >= 0 && i < len(a)
+    ensures // access to the entire array
+{
+    label l0
+    assume fold(snap(intRange(0, len(a)))) == 10 
+    assume fold(snap(intRange(0, i))) == 4
+    
+    exhale forall e: Int:: i in intRange(0, i) ==> 
+            acc(loc(a,i).val) 
+    label l1
 
+    assert fold(snap(intRange(i, len(a)))) == 6
+}
+\end{lstlisting}
+To encode our exhale strategy on our example, first we need to declare a new variable "lostP_val_l1", denoting the references with permission lost to field "val".
 \begin{lstlisting}
 var lostP_val_l1: Set[Ref]
-
-
+assume forall pElem: Ref ::
+    { (pElem in lostP_val_l1) }
+    (pElem in lostP_val_l1) ==
+        (perm(pElem.val) == none &&
+        old[l0](perm(pElem.val)) == write)
 \end{lstlisting}
+The axiom in the "assume" statement says that an element "pElem" is in this set if and only if the permission to "pElem.val" was previous full write access at state "l0" and the permissions is now "none" in the new state,\ie, the method lost permissions to this reference's "val" field. For every relevant field in the exhale, we generate one such variable and axiom pair.
 
+Next, we want to construct the filter $f'$ of remaining elements from the original filter $f$, which is  $intRange(0, len(a))$ in the above example. To do so, we define a domain function "filterNotLost()" denoting the remaining filter after some permissions were lost, as in \cref{def:notLost}.
+\begin{lstlisting}[label=axmNotLost, caption=Encoding Filter Remaining after Exhale]
+function filterNotLost(f1: Set[A], r: Receiver[A], lostR: Set[Ref]): Set[A] 
 
+axiom _filterNotLostAxiom {
+(forall a: A, fs: Set[A], r: Receiver[A], lostR: Set[Ref] ::
+  { a in filterNotLost(fs, r, lostR) }
+  (a in filterNotLost(fs, r, lostR)) ==
+  ((a in fs) && !((recApply(r, a) in lostR))))
+}
 
+axiom _filterNotLostSubset {
+(forall fs: Set[A], r: Receiver[A], lostR: Set[Ref] ::
+  { (filterNotLost(fs, r, lostR)) }
+  (filterNotLost(fs, r, lostR)) subset fs)
+}
+\end{lstlisting}
+The first axiom says element "a" is in the new filter if it is in the original filter, and "receiver(a)" is not a reference in the lost references set. The second axiom states explicitly that this new filter is a subset of the original filter. The trigger choices in these axioms are standard.
 
 \subsection{Inlined Axiom for Exhales Decomposition}
+With all of these sets constructed, we implement the exhale strategy by inlining another axiom after the exhale statement.
+\begin{lstlisting}[label=strat:Exh, caption= Exhale Decomposition Axiom]
+label l0
+exhale forall e: Int:: i in intRange(0, i) ==> 
+            acc(loc(a,i).val)
+label l1
+var lostP_val_l1: Set[Ref]
+// omitted the axiom for lostP
+
+assume forall fo: Fold[Int, Int, Int], f: Set[Int] ::
+{ old[l0]((hfoldApply(fo, snap_Int_Int_Int_val(fo, f)))) }
+(filterReceiverGood(f, (getreceiver(fo)))) &&
+((forall __ind: Int ::
+  { (__ind in f) }
+  (__ind in f) ==>
+  old[l0](perm((recApply((getreceiver(fo)),
+  __ind): Ref).val) ==
+  write)) &&
+(forall __ind: Int ::
+  { (__ind in
+  (filterNotLost(f, (getreceiver(fo)), lostP_val_l1))) }
+  (__ind in
+  (filterNotLost(f, (getreceiver(fo)), lostP_val_l1))) ==>
+  perm((recApply((getreceiver(fo)), __ind): Ref).val) ==
+  write)) ==>
+exhaleCompMap(fo, snap_Int_Int_Int_val(fo,
+f), 0)
+  
+dummy1(hfoldApply(fo, snap_Int_Int_Int_val(fo, (filterNotLost(f,
+(getreceiver(fo)), lostP_val_l1))))) &&
+  
+triggerDeleteBlock(old[l0]((hfoldApply(fo, snap_Int_Int_Int_val(fo,
+fo)))), (filterNotLost(f, (getreceiver(fo)),
+lostP_val_l1))) 
+\end{lstlisting}
+The LHS of the axiom encodes the well-definedness checks of the strategy. The checks require injectivity of the receiver on the filter, old state permissions to the heap locations prescribed by the filter, receiver, and field, and current state permissions to heap locations prescribed by the newly created "filterNotLost" filter.
+
+The RHS of the axiom first generates an "exhaleCompMap" instance that takes the fold object, the old snapshot, and a fieldID integer as input. This will be used as a trigger in the inhale strategy, where we try to reconstruct a filter that existed before the exhale. Think of the "exhaleCompMap" as saving this fold and snapshot pair for the later inhale strategy axiom.
+
+generates the output fold using a dummy function. "dummy1" simply generates the fold without giving any additional information about it; think of it as constructing the output fold with no extra assumption.
+Then, the second conjunct uses a triggering function "triggerDeleteBlock" to decompose the input fold (the old one), as described by the listing on \cpageref{loseMany}. The decomposition looks something like this.
+\begin{lstlisting}[label=decomsin1,caption=Singleton Decomposition Example]
+hfoldApply(fo, snap) == 
+  opApply(getoperator(fo), 
+    hfoldApply1(fo, mapDelete(snap, keys)), 
+    hfoldApply1(fo, mapSubmap(snap, keys)))
+\end{lstlisting}
+We have previously explained "mapDelete" as a function implemented by a post-condition of the snap function; "mapSubmap" is the same except the opposite. Instead of deleting keys from the map, it keeps only these keys on the map.
+
+The following code snippet summarizes the encoding for "mapSubmap".
+\begin{lstlisting}[label=axm:mapSubmap,caption=Encoding of mapSubmap]
+function mapSubmap(m: Map[A,B], e: Set[A]): Map[A,B] 
+...
+function snap_Int_Int_Int_val(fo: Fold[Int, Int, Int], filter: Set[Int]): Map[Int,Int]
+    ...
+    ensures (forall s: Set[Int] ::
+      { (mapSubmap(result, s): Map[Int,Int]) }
+       (s subset filter) ==>
+      snap_Int_Int_Int_val_prime(fo, s) ==
+      (mapSubmap(result, s): Map[Int,Int]))
+\end{lstlisting}
+Again, the output is a "prime" instance of the snap function for the same reasons as the "mapDelete" axiomatization.
+
+Altogether, this will decompose the input fold "fold(snap(intRange(0, len(a))))" as
+\begin{lstlisting}
+old(fold(snap(intRange(0, len(a))))) =
+    old(fold(snap(intRange(0, i)))) + 
+    old(fold(snap(intRange(i, len(a))))).
+\end{lstlisting}
+Technically, some of these terms will be in terms of "setminus" and "filterNotLost," but we have simplified that for readability. 
+
+The output fold generated will be "fold(snap(intRange(i, len(a))))," which by Viper framing is equal to "old(fold(snap(intRange(i, len(a)))))." The assertion will go through because $6 + 4 = 10$.
+
+\subsection{Encoding the Inhale Strategy }
+Finally, we encoding the inhale strategy as described in the definition on \cpageref{strat:final}.
+
+As  inhale strategy, we start with an input fold .  
 
 
+\subsection{Inlined Axiom For Inhale Decomposition}
 
 
-
-
-% \section{Domain Axioms and Triggers Rationale}
-
-
-
-% \section{Inlined Axioms and Triggers Rationale}
 
 \chapter{Implementation in Scala}
 To do after the 14th of December. 
